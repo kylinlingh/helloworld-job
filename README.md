@@ -1,6 +1,6 @@
 # 使用指南
 
-- 在项目根目录执行命令，生成辅助代码（以
+- 在项目根目录执行命令，生成辅助代码（zz_generated.options.go)
 ```shell
 go generate ./...
 ```
