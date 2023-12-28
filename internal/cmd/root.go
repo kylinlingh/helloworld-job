@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"helloworld/internal/service"
+	"helloworld/internal/job"
 	log "helloworld/pkg/logger"
 )
 
@@ -12,7 +12,7 @@ func NewRootCommand(programName string) *cobra.Command {
 		Use:   programName,
 		Short: "",
 		Long:  "",
-		//Example:       service.ServeExample(programName),
+		//Example:       job.ServeExample(programName),
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
@@ -26,7 +26,7 @@ order of precedence:
 If none of the three options are used, then helloworld will use the default config`
 
 // RegisterRootFlags register general flags for root command
-func RegisterRootFlags(cmd *cobra.Command, config *service.ParamConfig) {
+func RegisterRootFlags(cmd *cobra.Command, config *job.ParamConfig) {
 
 	cmd.PersistentFlags().StringP("config", "c", "", configDescription)
 	cmd.PersistentFlags().StringP("source", "s", ".", "path to source")

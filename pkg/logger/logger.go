@@ -29,7 +29,7 @@ import (
 - log.Ctx(ctx).Info().Fields(helpers.Flatten(c.DebugMap())).Msg("configuration") -> func Flatten(debugMap map[string]any) map[string]any
 
 携带错误：
-- log.Ctx(cmd.Context()).Fatal().Err(err).Msg("failed to create gRPC service")
+- log.Ctx(cmd.Context()).Fatal().Err(err).Msg("failed to create gRPC job")
 - log.Ctx(ctx).Error().Err(fmt.Errorf("unable to marshall termination log: %w", err)).Msg("failed to report termination log")
 */
 

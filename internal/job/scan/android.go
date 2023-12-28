@@ -18,9 +18,9 @@ func NewAndroidScanJob(ds datastore.DBFactory) *AndroidScanJob {
 }
 
 func (a *AndroidScanJob) RunJob(ctx context.Context) error {
-	log.Ctx(ctx).Info().Msg("android scan service started")
+	log.Ctx(ctx).Info().Msg("android scan job started")
 	time.Sleep(10 * time.Second)
-	log.Ctx(ctx).Info().Msg("android scan service finished")
+	log.Ctx(ctx).Info().Msg("android scan job finished")
 	//return nil
 	return errors.New("android error")
 }

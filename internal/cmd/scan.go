@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/spf13/cobra"
 	"helloworld/config"
-	"helloworld/internal/service"
+	"helloworld/internal/job"
 	"helloworld/pkg/cmd"
 	"helloworld/pkg/termination"
 )
@@ -15,7 +15,7 @@ func NewScanCommand(programName string, config *config.Config) *cobra.Command {
 		Short: "scan for compliance",
 		Long:  "static code analysis for helloworld compliance",
 		RunE: termination.PublishError(func(command *cobra.Command, args []string) error {
-			runConfig := service.NewRunConfig(config)
+			runConfig := job.NewRunConfig(config)
 			runnableJob, err := runConfig.Complete(command.Context())
 			if err != nil {
 				return err

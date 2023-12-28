@@ -17,9 +17,9 @@ func NewIOSScanJob(ds datastore.DBFactory) *IOSScanJob {
 }
 
 func (job *IOSScanJob) RunJob(ctx context.Context) error {
-	log.Ctx(ctx).Info().Msg("ios scan service started")
+	log.Ctx(ctx).Info().Msg("ios scan job started")
 	time.Sleep(15 * time.Second)
-	log.Ctx(ctx).Info().Msg("ios scan service finished")
+	log.Ctx(ctx).Info().Msg("ios scan job finished")
 	//return nil
 	return errors.New("ios error")
 }

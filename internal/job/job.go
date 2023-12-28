@@ -1,4 +1,4 @@
-package service
+package job
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"helloworld/config"
 	"helloworld/internal/datastore"
 	"helloworld/internal/datastore/mysql"
-	"helloworld/internal/scan"
+	scan2 "helloworld/internal/job/scan"
 	"helloworld/pkg/db"
 	log "helloworld/pkg/logger"
 	"io"
@@ -45,8 +45,8 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 
 	dbInstance, err := c.getDBInstance()
 	// 通过 Newxxxx 函数实现依赖注入，将数据库实例注入到对象中
-	iosJob := scan.NewIOSScanJob(dbInstance)
-	androidJob := scan.NewAndroidScanJob(dbInstance)
+	iosJob := scan2.NewIOSScanJob(dbInstance)
+	androidJob := scan2.NewAndroidScanJob(dbInstance)
 
 	return &completedJobConfig{
 		IOSJob:     iosJob,
@@ -119,21 +119,21 @@ func (c *closeableStack) CloseIfError(err error) error {
 	return nil
 }
 
-// RunnableJob is a service ready to run
+// RunnableJob is a job ready to run
 type RunnableJob interface {
 	Run(ctx context.Context) error
 }
 
 type completedJobConfig struct {
-	AndroidJob scan.ScanJob
-	IOSJob     scan.ScanJob
+	AndroidJob scan2.ScanJob
+	IOSJob     scan2.ScanJob
 
 	// 程序终止时的回调函数
 	closeFunc func() error
 }
 
 func (c *completedJobConfig) Run(ctx context.Context) error {
-	log.Ctx(ctx).Info().Msg("ready to run scan service 1")
+	log.Ctx(ctx).Info().Msg("ready to run scan job 1")
 	wg := sync.WaitGroup{}
 	finishChan := make(chan struct{})
 	var multiErr error
