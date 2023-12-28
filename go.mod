@@ -3,26 +3,34 @@ module helloworld
 go 1.21
 
 require (
+	github.com/creasty/defaults v1.7.0
 	github.com/ecordell/optgen v0.0.9
 	github.com/go-logr/logr v1.4.1
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/jzelinskie/stringz v0.0.3
+	github.com/lime008/gormzerolog v0.0.2
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
 	golang.org/x/sync v0.5.0
+	gorm.io/driver/mysql v1.5.2
+	gorm.io/gorm v1.25.5
 )
 
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
-	github.com/creasty/defaults v1.7.0 // indirect
 	github.com/dave/jennifer v1.6.1 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/go-sql-driver/mysql v1.7.0 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect

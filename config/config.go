@@ -1,6 +1,6 @@
 package config
 
-//go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . Config App Log Feature PG
+//go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . Config App Log Feature DataStore Mysql
 
 import (
 	"fmt"
@@ -11,10 +11,12 @@ import (
 type (
 	// Config 用于描述配置文件
 	Config struct {
-		App     `yaml:"app"`
-		Log     `yaml:"logger"`
-		PG      `yaml:"postgres"`
-		Feature `yaml:"feature"`
+		App       `yaml:"app"`
+		Log       `yaml:"logger"`
+		Feature   `yaml:"feature"`
+		DataStore `yaml:"datastore"`
+		Mysql     `yaml:"mysql"`
+		Postgres  `yaml:"postgres"`
 	}
 
 	// App -.
@@ -33,10 +35,25 @@ type (
 		ShutdownGracePeriod time.Duration `yaml:"shutdown_grace_period"   env:"FEATURE_SHUTDOWN_GRACE_PERIOD" env-default:"0s" debugmap:"visible"`
 	}
 
-	// PG -.
-	PG struct {
-		PoolMax int    `env-required:"true" yaml:"pool_max" env:"PG_POOL_MAX" debugmap:"visible"`
-		URE     string `yaml:"url" env:"PG_URL" debugmap:"visible"`
+	DataStore struct {
+		Engine             string        `yaml:"engine"   env:"DATASTORE_ENGINE" env-default:"mysql" debugmap:"visible"`
+		GcWindows          time.Duration `debugmap:"visible"`
+		GcMaxOperationTime time.Duration `debugmap:"visible"`
+		MigrationPhase     string        `debugmap:"visible"`
+	}
+
+	Mysql struct {
+		Host                  string        `yaml:"host"   env:"DATASTORE_ENGINE" env-default:"none" debugmap:"visible"`
+		Username              string        `yaml:"username"   env:"DATASTORE_ENGINE" env-default:"none" debugmap:"visible"`
+		Password              string        `yaml:"password"   env:"DATASTORE_ENGINE" env-default:"none" debugmap:"sensitive"`
+		Database              string        `yaml:"database"   env:"DATASTORE_ENGINE" env-default:"none" debugmap:"visible"`
+		MaxIdleConnections    int           `yaml:"max_idle_connections"   env:"DATASTORE_ENGINE" env-default:"none" debugmap:"visible"`
+		MaxOpenConnections    int           `yaml:"max_open_connections"   env:"DATASTORE_ENGINE" env-default:"none" debugmap:"visible"`
+		MaxConnectionLifeTime time.Duration `yaml:"max_connection_life_time"   env:"DATASTORE_ENGINE" env-default:"none" debugmap:"visible"`
+	}
+
+	Postgres struct {
+		Uri string `yaml:"uri"   env:"POSTGRES_URI" env-default:"" debugmap:"visible"`
 	}
 )
 

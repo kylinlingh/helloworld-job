@@ -247,69 +247,199 @@ func WithShutdownGracePeriod(shutdownGracePeriod time.Duration) FeatureOption {
 	}
 }
 
-type PGOption func(p *PG)
+type DataStoreOption func(d *DataStore)
 
-// NewPGWithOptions creates a new PG with the passed in options set
-func NewPGWithOptions(opts ...PGOption) *PG {
-	p := &PG{}
+// NewDataStoreWithOptions creates a new DataStore with the passed in options set
+func NewDataStoreWithOptions(opts ...DataStoreOption) *DataStore {
+	d := &DataStore{}
 	for _, o := range opts {
-		o(p)
+		o(d)
 	}
-	return p
+	return d
 }
 
-// NewPGWithOptionsAndDefaults creates a new PG with the passed in options set starting from the defaults
-func NewPGWithOptionsAndDefaults(opts ...PGOption) *PG {
-	p := &PG{}
-	defaults.MustSet(p)
+// NewDataStoreWithOptionsAndDefaults creates a new DataStore with the passed in options set starting from the defaults
+func NewDataStoreWithOptionsAndDefaults(opts ...DataStoreOption) *DataStore {
+	d := &DataStore{}
+	defaults.MustSet(d)
 	for _, o := range opts {
-		o(p)
+		o(d)
 	}
-	return p
+	return d
 }
 
-// ToOption returns a new PGOption that sets the values from the passed in PG
-func (p *PG) ToOption() PGOption {
-	return func(to *PG) {
-		to.PoolMax = p.PoolMax
-		to.URE = p.URE
+// ToOption returns a new DataStoreOption that sets the values from the passed in DataStore
+func (d *DataStore) ToOption() DataStoreOption {
+	return func(to *DataStore) {
+		to.Engine = d.Engine
+		to.GcWindows = d.GcWindows
+		to.GcMaxOperationTime = d.GcMaxOperationTime
+		to.MigrationPhase = d.MigrationPhase
 	}
 }
 
-// DebugMap returns a map form of PG for debugging
-func (p PG) DebugMap() map[string]any {
+// DebugMap returns a map form of DataStore for debugging
+func (d DataStore) DebugMap() map[string]any {
 	debugMap := map[string]any{}
-	debugMap["PoolMax"] = helpers.DebugValue(p.PoolMax, false)
-	debugMap["URE"] = helpers.DebugValue(p.URE, false)
+	debugMap["Engine"] = helpers.DebugValue(d.Engine, false)
+	debugMap["GcWindows"] = helpers.DebugValue(d.GcWindows, false)
+	debugMap["GcMaxOperationTime"] = helpers.DebugValue(d.GcMaxOperationTime, false)
+	debugMap["MigrationPhase"] = helpers.DebugValue(d.MigrationPhase, false)
 	return debugMap
 }
 
-// PGWithOptions configures an existing PG with the passed in options set
-func PGWithOptions(p *PG, opts ...PGOption) *PG {
+// DataStoreWithOptions configures an existing DataStore with the passed in options set
+func DataStoreWithOptions(d *DataStore, opts ...DataStoreOption) *DataStore {
 	for _, o := range opts {
-		o(p)
+		o(d)
 	}
-	return p
+	return d
 }
 
-// WithOptions configures the receiver PG with the passed in options set
-func (p *PG) WithOptions(opts ...PGOption) *PG {
+// WithOptions configures the receiver DataStore with the passed in options set
+func (d *DataStore) WithOptions(opts ...DataStoreOption) *DataStore {
 	for _, o := range opts {
-		o(p)
+		o(d)
 	}
-	return p
+	return d
 }
 
-// WithPoolMax returns an option that can set PoolMax on a PG
-func WithPoolMax(poolMax int) PGOption {
-	return func(p *PG) {
-		p.PoolMax = poolMax
+// WithEngine returns an option that can set Engine on a DataStore
+func WithEngine(engine string) DataStoreOption {
+	return func(d *DataStore) {
+		d.Engine = engine
 	}
 }
 
-// WithURE returns an option that can set URE on a PG
-func WithURE(uRE string) PGOption {
-	return func(p *PG) {
-		p.URE = uRE
+// WithGcWindows returns an option that can set GcWindows on a DataStore
+func WithGcWindows(gcWindows time.Duration) DataStoreOption {
+	return func(d *DataStore) {
+		d.GcWindows = gcWindows
+	}
+}
+
+// WithGcMaxOperationTime returns an option that can set GcMaxOperationTime on a DataStore
+func WithGcMaxOperationTime(gcMaxOperationTime time.Duration) DataStoreOption {
+	return func(d *DataStore) {
+		d.GcMaxOperationTime = gcMaxOperationTime
+	}
+}
+
+// WithMigrationPhase returns an option that can set MigrationPhase on a DataStore
+func WithMigrationPhase(migrationPhase string) DataStoreOption {
+	return func(d *DataStore) {
+		d.MigrationPhase = migrationPhase
+	}
+}
+
+type MysqlOption func(m *Mysql)
+
+// NewMysqlWithOptions creates a new Mysql with the passed in options set
+func NewMysqlWithOptions(opts ...MysqlOption) *Mysql {
+	m := &Mysql{}
+	for _, o := range opts {
+		o(m)
+	}
+	return m
+}
+
+// NewMysqlWithOptionsAndDefaults creates a new Mysql with the passed in options set starting from the defaults
+func NewMysqlWithOptionsAndDefaults(opts ...MysqlOption) *Mysql {
+	m := &Mysql{}
+	defaults.MustSet(m)
+	for _, o := range opts {
+		o(m)
+	}
+	return m
+}
+
+// ToOption returns a new MysqlOption that sets the values from the passed in Mysql
+func (m *Mysql) ToOption() MysqlOption {
+	return func(to *Mysql) {
+		to.Host = m.Host
+		to.Username = m.Username
+		to.Password = m.Password
+		to.Database = m.Database
+		to.MaxIdleConnections = m.MaxIdleConnections
+		to.MaxOpenConnections = m.MaxOpenConnections
+		to.MaxConnectionLifeTime = m.MaxConnectionLifeTime
+	}
+}
+
+// DebugMap returns a map form of Mysql for debugging
+func (m Mysql) DebugMap() map[string]any {
+	debugMap := map[string]any{}
+	debugMap["Host"] = helpers.DebugValue(m.Host, false)
+	debugMap["Username"] = helpers.DebugValue(m.Username, false)
+	debugMap["Password"] = helpers.SensitiveDebugValue(m.Password)
+	debugMap["Database"] = helpers.DebugValue(m.Database, false)
+	debugMap["MaxIdleConnections"] = helpers.DebugValue(m.MaxIdleConnections, false)
+	debugMap["MaxOpenConnections"] = helpers.DebugValue(m.MaxOpenConnections, false)
+	debugMap["MaxConnectionLifeTime"] = helpers.DebugValue(m.MaxConnectionLifeTime, false)
+	return debugMap
+}
+
+// MysqlWithOptions configures an existing Mysql with the passed in options set
+func MysqlWithOptions(m *Mysql, opts ...MysqlOption) *Mysql {
+	for _, o := range opts {
+		o(m)
+	}
+	return m
+}
+
+// WithOptions configures the receiver Mysql with the passed in options set
+func (m *Mysql) WithOptions(opts ...MysqlOption) *Mysql {
+	for _, o := range opts {
+		o(m)
+	}
+	return m
+}
+
+// WithHost returns an option that can set Host on a Mysql
+func WithHost(host string) MysqlOption {
+	return func(m *Mysql) {
+		m.Host = host
+	}
+}
+
+// WithUsername returns an option that can set Username on a Mysql
+func WithUsername(username string) MysqlOption {
+	return func(m *Mysql) {
+		m.Username = username
+	}
+}
+
+// WithPassword returns an option that can set Password on a Mysql
+func WithPassword(password string) MysqlOption {
+	return func(m *Mysql) {
+		m.Password = password
+	}
+}
+
+// WithDatabase returns an option that can set Database on a Mysql
+func WithDatabase(database string) MysqlOption {
+	return func(m *Mysql) {
+		m.Database = database
+	}
+}
+
+// WithMaxIdleConnections returns an option that can set MaxIdleConnections on a Mysql
+func WithMaxIdleConnections(maxIdleConnections int) MysqlOption {
+	return func(m *Mysql) {
+		m.MaxIdleConnections = maxIdleConnections
+	}
+}
+
+// WithMaxOpenConnections returns an option that can set MaxOpenConnections on a Mysql
+func WithMaxOpenConnections(maxOpenConnections int) MysqlOption {
+	return func(m *Mysql) {
+		m.MaxOpenConnections = maxOpenConnections
+	}
+}
+
+// WithMaxConnectionLifeTime returns an option that can set MaxConnectionLifeTime on a Mysql
+func WithMaxConnectionLifeTime(maxConnectionLifeTime time.Duration) MysqlOption {
+	return func(m *Mysql) {
+		m.MaxConnectionLifeTime = maxConnectionLifeTime
 	}
 }
