@@ -7,8 +7,7 @@ logger:
   log_level: 'debug'
 
 postgres:
-  pool_max: 2
-  url: ""
+  uri: ""
 
 feature:
   shutdown_grace_period: 0s # 接收到终止信号后等待多久才彻底停止程序，这个时间用于响应存量的服务并释放资源
@@ -24,3 +23,18 @@ mysql:
   max_idle_connections: 50
   max_open_connections: 100
   max_connection_life_time: 10s
+
+upload: # 上报特定数据
+  enable: true # 设置为 true 后，开启数据上报功能
+  storage: 'local' # local：本地上传；redis：上传到 redis
+  workers-num: 50 # 指定 worker 个数
+  records-buffer-size: 2000 # 缓存的上报数据数量，达到数量后会立即 flush
+  flush-interval: 200ms # 每次消息上报之间的时间间隔，单位：毫秒，0 < flush-interval <= 1000
+  enable-detailed-recording: true # 开启记录详情，详细记录的功能
+
+pumps: # 收集上报数据的后端，可以为 csv，es，kafka，mongodb等，每种后端都对应不同的 meta 配置；可以同时存在多个后端
+  csv:
+    type: 'csv'
+    meta:
+      csv_dir: './analytics-data'
+

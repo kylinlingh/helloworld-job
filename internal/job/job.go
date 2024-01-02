@@ -8,6 +8,7 @@ import (
 	"helloworld/internal/datastore"
 	"helloworld/internal/datastore/mysql"
 	scan2 "helloworld/internal/job/scan"
+	"helloworld/internal/pump"
 	"helloworld/pkg/db"
 	log "helloworld/pkg/logger"
 	"io"
@@ -24,6 +25,7 @@ type ParamConfig struct {
 	Feature   config.Feature   `debugmap:"visible"`
 	Datastore config.DataStore `debugmap:"visible"`
 	Mysql     config.Mysql     `debugmap:"visible"`
+	Upload    config.Upload    `debugmap:"visible"`
 	Postgres  config.Postgres  `debugmap:"visible"`
 
 	// From command flags
@@ -48,11 +50,36 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 	iosJob := scan2.NewIOSScanJob(dbInstance)
 	androidJob := scan2.NewAndroidScanJob(dbInstance)
 
+	// 开启数据上报功能
+	if c.Upload.Enable {
+		// 连接存储上报数据的后端
+
+		// 开始上报数据
+		uploadIns, _ := c.getUploadInstace()
+		uploadIns.Start()
+	}
+
 	return &completedJobConfig{
 		IOSJob:     iosJob,
 		AndroidJob: androidJob,
 		closeFunc:  closeables.Close,
 	}, nil
+}
+
+func (c *ParamConfig) getUploadInstace() (*pump.UploadIns, error) {
+	var storageIns pump.UploadHandler
+	if c.Upload.Storage == "memory" {
+
+	}
+	uploadOpts := &pump.UploadOptions{
+		WorkersNum:        c.Upload.WorkersNum,
+		RecordsBufferSize: c.Upload.RecordsBufferSize,
+		FlushInterval:     c.Upload.FlushInterval,
+		//StorageExpirationTime:   c.Upload.Storage,
+		Enable:                  c.Upload.Enable,
+		EnableDetailedRecording: c.Upload.EnableDetailedRecording,
+	}
+	return pump.NewUploadIns(uploadOpts, storageIns), nil
 }
 
 func (c *ParamConfig) getDBInstance() (datastore.DBFactory, error) {
@@ -133,7 +160,7 @@ type completedJobConfig struct {
 }
 
 func (c *completedJobConfig) Run(ctx context.Context) error {
-	log.Ctx(ctx).Info().Msg("ready to run scan job 1")
+	log.Ctx(ctx).Info().Msg("ready to run scan job")
 	wg := sync.WaitGroup{}
 	finishChan := make(chan struct{})
 	var multiErr error
@@ -185,5 +212,6 @@ func NewRunConfig(config *config.Config) *ParamConfig {
 		Datastore: config.DataStore,
 		Mysql:     config.Mysql,
 		Postgres:  config.Postgres,
+		Upload:    config.Upload,
 	}
 }

@@ -36,6 +36,7 @@ func (p *ParamConfig) ToOption() ParamConfigOption {
 		to.Feature = p.Feature
 		to.Datastore = p.Datastore
 		to.Mysql = p.Mysql
+		to.Upload = p.Upload
 		to.Postgres = p.Postgres
 		to.ConfigFile = p.ConfigFile
 		to.ReportPath = p.ReportPath
@@ -50,6 +51,7 @@ func (p ParamConfig) DebugMap() map[string]any {
 	debugMap["Feature"] = helpers.DebugValue(p.Feature, false)
 	debugMap["Datastore"] = helpers.DebugValue(p.Datastore, false)
 	debugMap["Mysql"] = helpers.DebugValue(p.Mysql, false)
+	debugMap["Upload"] = helpers.DebugValue(p.Upload, false)
 	debugMap["Postgres"] = helpers.DebugValue(p.Postgres, false)
 	debugMap["ConfigFile"] = helpers.DebugValue(p.ConfigFile, false)
 	debugMap["ReportPath"] = helpers.DebugValue(p.ReportPath, false)
@@ -104,6 +106,13 @@ func WithDatastore(datastore config.DataStore) ParamConfigOption {
 func WithMysql(mysql config.Mysql) ParamConfigOption {
 	return func(p *ParamConfig) {
 		p.Mysql = mysql
+	}
+}
+
+// WithUpload returns an option that can set Upload on a ParamConfig
+func WithUpload(upload config.Upload) ParamConfigOption {
+	return func(p *ParamConfig) {
+		p.Upload = upload
 	}
 }
 

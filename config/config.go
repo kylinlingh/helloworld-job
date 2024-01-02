@@ -1,6 +1,6 @@
 package config
 
-//go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . Config App Log Feature DataStore Mysql
+//go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . Config App Log Feature DataStore Mysql Report
 
 import (
 	"fmt"
@@ -17,6 +17,7 @@ type (
 		DataStore `yaml:"datastore"`
 		Mysql     `yaml:"mysql"`
 		Postgres  `yaml:"postgres"`
+		Upload    `yaml:"upload"`
 	}
 
 	// App -.
@@ -50,6 +51,15 @@ type (
 		MaxIdleConnections    int           `yaml:"max_idle_connections"   env:"DATASTORE_ENGINE" env-default:"none" debugmap:"visible"`
 		MaxOpenConnections    int           `yaml:"max_open_connections"   env:"DATASTORE_ENGINE" env-default:"none" debugmap:"visible"`
 		MaxConnectionLifeTime time.Duration `yaml:"max_connection_life_time"   env:"DATASTORE_ENGINE" env-default:"none" debugmap:"visible"`
+	}
+
+	Upload struct {
+		Enable                  bool          `env-required:"true" yaml:"enable"   env:"REPORT_ENABLE" env-default:"true" debugmap:"visible"`
+		Storage                 string        `yaml:"storage"   env:"REPORT_STORAGE" env-default:"local" debugmap:"visible"`
+		WorkersNum              int           `yaml:"workers-num"   env:"REPORT_POOL_SIZE" env-default:"50" debugmap:"visible"`
+		RecordsBufferSize       uint64        `yaml:"records-buffer-size"   env:"REPORT_RECORDS_BUFFER_SIZE" env-default:"2000" debugmap:"visible"`
+		FlushInterval           time.Duration `yaml:"flush-interval"   env:"REPORT_FLUSH_INTERVAL" env-default:"200ms" debugmap:"visible"`
+		EnableDetailedRecording bool          `yaml:"enable-detailed-recording"   env:"REPORT_ENABLE_DETAILED_RECORDING" env-default:"true" debugmap:"visible"`
 	}
 
 	Postgres struct {

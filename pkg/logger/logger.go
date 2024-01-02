@@ -30,7 +30,7 @@ import (
 
 携带错误：
 - log.Ctx(cmd.Context()).Fatal().Err(err).Msg("failed to create gRPC job")
-- log.Ctx(ctx).Error().Err(fmt.Errorf("unable to marshall termination log: %w", err)).Msg("failed to report termination log")
+- log.Ctx(ctx).Error().Err(fmt.Errorf("unable to marshall termination log: %w", err)).Msg("failed to storage termination log")
 */
 
 var Logger zerolog.Logger

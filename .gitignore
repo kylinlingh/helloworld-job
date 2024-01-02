@@ -332,7 +332,7 @@ flycheck_*.el
 # log
 *.log
 
-# Output of backend and frontend
+# Output of pumps and frontend
 /_output
 /_debug
 
