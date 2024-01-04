@@ -3,10 +3,10 @@ package scan
 import (
 	"context"
 	"errors"
+	"helloworld/internal/dataflow/datastructure"
+	"helloworld/internal/dataflow/upload"
 	"helloworld/internal/datastore"
 	"helloworld/internal/entity"
-	"helloworld/internal/pump/analytics"
-	"helloworld/internal/pump/uploadto"
 	log "helloworld/pkg/logger"
 	"time"
 )
@@ -24,14 +24,14 @@ func (a *AndroidScanJob) RunJob(ctx context.Context) error {
 
 	a.ScanStaticCode(ctx)
 
-	record := analytics.AnalyticsRecord{
+	record := datastructure.AnalyticsRecord{
 		TimeStamp:  time.Now().Unix(),
 		JobID:      "13231",
 		TaskID:     "2",
 		TaskTag:    "2",
 		TaskResult: "41343",
 	}
-	uploadto.GetUploadInstance().UploadRecord(&record)
+	upload.GetUploadService().UploadRecord(&record)
 
 	time.Sleep(10 * time.Second)
 	log.Ctx(ctx).Info().Msg("android scan job finished")

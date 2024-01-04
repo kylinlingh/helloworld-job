@@ -444,6 +444,64 @@ func WithMaxConnectionLifeTime(maxConnectionLifeTime time.Duration) MysqlOption 
 	}
 }
 
+type PostgresOption func(p *Postgres)
+
+// NewPostgresWithOptions creates a new Postgres with the passed in options set
+func NewPostgresWithOptions(opts ...PostgresOption) *Postgres {
+	p := &Postgres{}
+	for _, o := range opts {
+		o(p)
+	}
+	return p
+}
+
+// NewPostgresWithOptionsAndDefaults creates a new Postgres with the passed in options set starting from the defaults
+func NewPostgresWithOptionsAndDefaults(opts ...PostgresOption) *Postgres {
+	p := &Postgres{}
+	defaults.MustSet(p)
+	for _, o := range opts {
+		o(p)
+	}
+	return p
+}
+
+// ToOption returns a new PostgresOption that sets the values from the passed in Postgres
+func (p *Postgres) ToOption() PostgresOption {
+	return func(to *Postgres) {
+		to.Uri = p.Uri
+	}
+}
+
+// DebugMap returns a map form of Postgres for debugging
+func (p Postgres) DebugMap() map[string]any {
+	debugMap := map[string]any{}
+	debugMap["Uri"] = helpers.DebugValue(p.Uri, false)
+	return debugMap
+}
+
+// PostgresWithOptions configures an existing Postgres with the passed in options set
+func PostgresWithOptions(p *Postgres, opts ...PostgresOption) *Postgres {
+	for _, o := range opts {
+		o(p)
+	}
+	return p
+}
+
+// WithOptions configures the receiver Postgres with the passed in options set
+func (p *Postgres) WithOptions(opts ...PostgresOption) *Postgres {
+	for _, o := range opts {
+		o(p)
+	}
+	return p
+}
+
+// WithUri returns an option that can set Uri on a Postgres
+func WithUri(uri string) PostgresOption {
+	return func(p *Postgres) {
+		p.Uri = uri
+	}
+}
+
 type UploadOption func(u *Upload)
 
 // NewUploadWithOptions creates a new Upload with the passed in options set

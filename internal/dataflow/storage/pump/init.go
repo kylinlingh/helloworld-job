@@ -1,4 +1,4 @@
-package pumps
+package pump
 
 var availablePumps map[string]PumpBackend
 

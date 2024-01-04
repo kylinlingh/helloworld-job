@@ -1,6 +1,6 @@
 package config
 
-//go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . Config App Log Feature DataStore Mysql Report Upload Download Backends CSVOpt
+//go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . Config App Log Feature DataStore Mysql Postgres Upload Download Backends CSVOpt
 
 import (
 	"fmt"

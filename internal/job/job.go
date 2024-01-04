@@ -2,15 +2,16 @@ package job
 
 import (
 	"context"
+	"github.com/dgraph-io/ristretto"
 	"github.com/ecordell/optgen/helpers"
 	"github.com/hashicorp/go-multierror"
 	"helloworld/config"
+	"helloworld/internal/dataflow/pump"
+	memory2 "helloworld/internal/dataflow/storage/uploadto/memory"
+	"helloworld/internal/dataflow/upload"
 	"helloworld/internal/datastore"
 	"helloworld/internal/datastore/mysql"
 	scan2 "helloworld/internal/job/scan"
-	"helloworld/internal/pump/pumps"
-	"helloworld/internal/pump/uploadto"
-	"helloworld/internal/pump/uploadto/memory"
 	"helloworld/pkg/db"
 	log "helloworld/pkg/logger"
 	"helloworld/pkg/signal"
@@ -57,15 +58,33 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 
 	// 开启数据上报功能
 	if c.Upload.Enable {
-		go func() {
-			// 连接存储上报数据的后端
-			stopCh := signal.SetupSignalHandler()
-			c.getPumpBackendInstance(stopCh)
-		}()
+		//go func() {
+		//	// 连接存储上报数据的后端
+		//	stopCh := signal.SetupSignalHandler()
+		//	c.getPumpBackendInstance_out(stopCh)
+		//}()
+		//
+		//// 开始上报数据
+		//uploadIns, _ := c.getUploadInstace_out()
+		//uploadIns.Start()
 
-		// 开始上报数据
-		uploadIns, _ := c.getUploadInstace()
-		uploadIns.Start()
+		if c.Upload.Storage == "memory" {
+			// 上报数据
+			ups, cache := c.getUploadServiceWithMemoryStorage()
+			ups.Start()
+
+			pc := c.NewPumps()
+			pumpService := pump.CreatePumpService(c.Download.PurgeDelay, pc, cache)
+
+			// 拉取数据并导出到其他目的地
+			stopCh := signal.SetupSignalHandler()
+			preparedPumpService := pumpService.PrepareRun()
+			go func() {
+				preparedPumpService.Run(stopCh)
+			}()
+		} else if c.Upload.Storage == "redis" {
+
+		}
 	}
 
 	return &completedJobConfig{
@@ -75,27 +94,27 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 	}, nil
 }
 
-func (c *ParamConfig) getUploadInstace() (*uploadto.UploadIns, error) {
-	var storageIns uploadto.UploadStorage
-	if c.Upload.Storage == "memory" {
-		storageIns = &memory.MemoryStorage{}
-	}
-	uploadOpts := &uploadto.UploadOptions{
-		WorkersNum:              c.Upload.WorkersNum,
-		RecordsBufferSize:       c.Upload.RecordsBufferSize,
-		FlushInterval:           c.Upload.FlushInterval,
+func (c *ParamConfig) getUploadServiceWithMemoryStorage() (*upload.UploadService, *ristretto.Cache) {
+	storage := &memory2.UploadMemoryStorage{}
+	storage.Connect()
+
+	uploadConf := &upload.UploadConfig{
 		Enable:                  c.Upload.Enable,
+		WorkersNum:              c.Upload.WorkersNum,
+		FlushInterval:           c.Upload.FlushInterval,
+		RecordsBufferSize:       c.Upload.RecordsBufferSize,
 		EnableDetailedRecording: c.Upload.EnableDetailedRecording,
 	}
-	return uploadto.NewUploadIns(uploadOpts, storageIns), nil
+
+	return upload.CreateUploadService(uploadConf, storage), storage.GetStorage()
 }
 
-func (c *ParamConfig) NewPumps() map[string]pumps.PumpConfig {
-	m := make(map[string]pumps.PumpConfig)
+func (c *ParamConfig) NewPumps() map[string]pump.PumpConfig {
+	m := make(map[string]pump.PumpConfig)
 	for _, name := range c.Download.Backends {
 		switch name {
 		case "csv":
-			m["csv"] = pumps.PumpConfig{
+			m["csv"] = pump.PumpConfig{
 				Type: "csv",
 				Meta: map[string]interface{}{
 					"csv_dir": c.Backends.CSV.CSVDIR,
@@ -106,16 +125,16 @@ func (c *ParamConfig) NewPumps() map[string]pumps.PumpConfig {
 	return m
 }
 
-func (c *ParamConfig) getPumpBackendInstance(stopCh <-chan struct{}) {
-	pc := c.NewPumps()
-	pservice, err := pumps.CreatePumpService(c.Download, pc, c.Upload.Storage)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to initialize pump service")
-	}
-	if err = pservice.PrepareRun().Run(stopCh); err != nil {
-		log.Fatal().Err(err).Msg("failed to run pump service")
-	}
-}
+//func (c *ParamConfig) getPumpBackendInstance_out(stopCh <-chan struct{}) {
+//	pc := c.NewPumps()
+//	pservice, err := pumps.CreatePumpService(c.Download, pc, c.Upload.Storage)
+//	if err != nil {
+//		log.Fatal().Err(err).Msg("failed to initialize pump service")
+//	}
+//	if err = pservice.PrepareRun().Run(stopCh); err != nil {
+//		log.Fatal().Err(err).Msg("failed to run pump service")
+//	}
+//}
 
 func (c *ParamConfig) getDBInstance() (datastore.DBFactory, error) {
 	var factory datastore.DBFactory

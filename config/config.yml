@@ -33,7 +33,7 @@ upload: # 上报特定数据
   flush-interval: 200ms # 每次消息上报之间的时间间隔，单位：毫秒，0 < flush-interval <= 1000
   enable-detailed-recording: true # 开启记录详情，详细记录的功能
 
-download: # 将上面上报的数据重新拉取下来，然后入库，只有在 upload.enable 为 true 时才会起作用
+download: # 将上面上报的数据重新拉取下来，然后入库，只有在 uploadto.enable 为 true 时才会起作用
   purge-delay: 1s # 多久拉取一次
   backends: ['csv']
 

@@ -1,9 +1,10 @@
-package uploadto
+package upload
 
 import (
 	"github.com/dgraph-io/ristretto"
 	"github.com/vmihailenco/msgpack/v5"
-	"helloworld/internal/pump/analytics"
+	"helloworld/internal/dataflow/datastructure"
+	"helloworld/internal/dataflow/storage/uploadto"
 	log "helloworld/pkg/logger"
 	"sync"
 	"sync/atomic"
@@ -12,10 +13,8 @@ import (
 
 const anaylticsKeyName = "job-analytics"
 
-var uploadIns *UploadIns
-
-// UploadOptions defines options for upload-storage
-type UploadOptions struct {
+// UploadConfig defines options for uploadto-storage
+type UploadConfig struct {
 	Enable            bool          `json:"enable"                    mapstructure:"enable"`
 	Storage           string        `json:"storage"                    mapstructure:"storage"`
 	WorkersNum        int           `json:"workers-num"                 mapstructure:"pool-size"`
@@ -25,37 +24,37 @@ type UploadOptions struct {
 	EnableDetailedRecording bool `json:"enable-detailed-recording" mapstructure:"enable-detailed-recording"`
 }
 
-type UploadIns struct {
-	uploadStorage              UploadStorage
+type UploadService struct {
+	uploadStorage              uploadto.UploadStorage
 	localCache                 *ristretto.Cache
 	workerNums                 int
-	recordChan                 chan *analytics.AnalyticsRecord
+	recordChan                 chan *datastructure.AnalyticsRecord
 	workerBufferSize           uint64
 	recordsBufferFlushInterval time.Duration
 	shouldStop                 uint32
 	waitGroup                  sync.WaitGroup
 }
 
-// NewUploadIns returns a new downloadfrom instance.
-func NewUploadIns(opts *UploadOptions, handler UploadStorage) *UploadIns {
+var uploadService *UploadService
+
+// CreateUploadService returns a new upload instance.
+func CreateUploadService(opts *UploadConfig, storage uploadto.UploadStorage) *UploadService {
 	wn := opts.WorkersNum
 	recordBufferSize := opts.RecordsBufferSize
 	workerBufferSize := recordBufferSize / uint64(wn)
 	log.Info().Uint64("workerBufferSize", workerBufferSize).Msgf("analytics pool worker buffer size")
-	recordsChan := make(chan *analytics.AnalyticsRecord, recordBufferSize)
-	uploadIns = &UploadIns{
-		uploadStorage:              handler,
+	recordsChan := make(chan *datastructure.AnalyticsRecord, recordBufferSize)
+	uploadService = &UploadService{
+		uploadStorage:              storage,
 		workerNums:                 wn,
 		recordChan:                 recordsChan,
 		workerBufferSize:           workerBufferSize,
 		recordsBufferFlushInterval: opts.FlushInterval,
 	}
-	return uploadIns
+	return uploadService
 }
 
-func (u *UploadIns) Start() {
-	u.uploadStorage.Connect()
-
+func (u *UploadService) Start() {
 	atomic.SwapUint32(&u.shouldStop, 0)
 	for i := 0; i < u.workerNums; i++ {
 		u.waitGroup.Add(1)
@@ -64,7 +63,7 @@ func (u *UploadIns) Start() {
 	}
 }
 
-func (u *UploadIns) runWorker(workerId int) {
+func (u *UploadService) runWorker(workerId int) {
 	defer u.waitGroup.Done()
 	log.Debug().Int("goroutinue id", workerId).Msg("worker running")
 
@@ -104,7 +103,10 @@ func (u *UploadIns) runWorker(workerId int) {
 
 }
 
-func (u *UploadIns) UploadRecord(record *analytics.AnalyticsRecord) error {
+func (u *UploadService) UploadRecord(record *datastructure.AnalyticsRecord) error {
+	if u == nil {
+		return nil
+	}
 	// 检查信号
 	if atomic.LoadUint32(&u.shouldStop) > 0 {
 		return nil
@@ -115,12 +117,10 @@ func (u *UploadIns) UploadRecord(record *analytics.AnalyticsRecord) error {
 	return nil
 }
 
-func GetUploadInstance() *UploadIns {
-	return uploadIns
+func (u *UploadService) GetStorage() uploadto.UploadStorage {
+	return u.uploadStorage
 }
 
-type UploadStorage interface {
-	Connect() bool
-	AppendToSetPipelined(string, [][]byte)
-	GetStorage() UploadStorage
+func GetUploadService() *UploadService {
+	return uploadService
 }

@@ -1,4 +1,4 @@
-package download
+package downloadfrom
 
 type DownloadStroage interface {
 	GetName() string

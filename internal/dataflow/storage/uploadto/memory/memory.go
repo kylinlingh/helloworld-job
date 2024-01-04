@@ -3,32 +3,24 @@ package memory
 import (
 	"errors"
 	"github.com/dgraph-io/ristretto"
-	"helloworld/internal/pump/uploadto"
+	"helloworld/internal/dataflow/datastructure"
 	log "helloworld/pkg/logger"
 	"sync"
 )
 
-/*
-数据上报的目的地：本地内存里的 channel
-*/
-
-type MessageList struct {
-	Count   int
-	ValList [][]byte
-	Mutext  sync.Mutex
-}
-
-type MemoryStorage struct {
+type UploadMemoryStorage struct {
 	cache *ristretto.Cache
 }
 
-func (m *MemoryStorage) GetStorage() uploadto.UploadStorage {
-	return m
+func New(c *ristretto.Cache) *UploadMemoryStorage {
+	return &UploadMemoryStorage{
+		cache: c,
+	}
 }
 
 var once sync.Once
 
-func (m *MemoryStorage) Connect() bool {
+func (u *UploadMemoryStorage) Connect() bool {
 	once.Do(func() {
 		var err error
 		c := &ristretto.Config{
@@ -37,7 +29,7 @@ func (m *MemoryStorage) Connect() bool {
 			BufferItems: 64,      // number of keys per Get buffer.
 			Cost:        nil,
 		}
-		m.cache, err = ristretto.NewCache(c)
+		u.cache, err = ristretto.NewCache(c)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to call ristretto.NewCache()")
 		}
@@ -45,23 +37,23 @@ func (m *MemoryStorage) Connect() bool {
 	return true
 }
 
-func (m *MemoryStorage) AppendToSetPipelined(key string, values [][]byte) {
-	var ml *MessageList
-	cval, ok := m.cache.Get(key)
+func (u *UploadMemoryStorage) AppendToSetPipelined(key string, values [][]byte) {
+	var ml *datastructure.MessageList
+	cval, ok := u.cache.Get(key)
 	if cval == nil || !ok {
-		ml = &MessageList{
+		ml = &datastructure.MessageList{
 			Count:   0,
 			ValList: make([][]byte, 0),
 		}
-		ok = m.cache.Set(key, ml, 1)
+		ok = u.cache.Set(key, ml, 1)
 		if !ok {
 			log.Error().Err(errors.New("failed to set ristretto cache"))
 		}
 		// 必须等待写入成功
-		m.cache.Wait()
-		cval, _ = m.cache.Get(key)
+		u.cache.Wait()
+		cval, _ = u.cache.Get(key)
 	}
-	ml = cval.(*MessageList)
+	ml = cval.(*datastructure.MessageList)
 
 	ml.Mutext.Lock()
 	defer ml.Mutext.Unlock()
@@ -70,11 +62,14 @@ func (m *MemoryStorage) AppendToSetPipelined(key string, values [][]byte) {
 	}
 	ml.Count += len(values)
 
-	val, ok := m.cache.Get(key)
+	val, ok := u.cache.Get(key)
 	if !ok {
 		log.Error().Msg("cannot get items from cache")
 	}
-	mv := val.(*MessageList)
+	mv := val.(*datastructure.MessageList)
 	log.Trace().Int("count", len(mv.ValList)).Msg("record has been uploaded to memory cache")
+}
 
+func (u UploadMemoryStorage) GetStorage() *ristretto.Cache {
+	return u.cache
 }

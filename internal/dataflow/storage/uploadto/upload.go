@@ -1,4 +1,4 @@
-package upload
+package uploadto
 
 type UploadStorage interface {
 	Connect() bool

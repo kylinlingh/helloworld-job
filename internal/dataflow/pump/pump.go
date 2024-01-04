@@ -1,12 +1,13 @@
-package pumps
+package pump
 
 import (
 	"context"
+	"github.com/dgraph-io/ristretto"
 	"github.com/vmihailenco/msgpack/v5"
-	"helloworld/config"
-	"helloworld/internal/pump/analytics"
-	"helloworld/internal/pump/downloadfrom"
-	"helloworld/internal/pump/downloadfrom/memory"
+	"helloworld/internal/dataflow/datastructure"
+	"helloworld/internal/dataflow/storage/downloadfrom"
+	"helloworld/internal/dataflow/storage/downloadfrom/memory"
+	"helloworld/internal/dataflow/storage/pump"
 	log "helloworld/pkg/logger"
 	"sync"
 	"time"
@@ -14,18 +15,13 @@ import (
 
 const anaylticsKeyName = "job-analytics"
 
-type Options struct {
-	PurgeDelay time.Duration `json:"purge-delay"                    mapstructure:"purge-delay"`
-	Pumps      map[string]PumpConfig
-}
-
 // PumpConfig defines options for pump back-end.
 type PumpConfig struct {
-	Type                  string                     `json:"type"                    mapstructure:"type"`
-	Filters               analytics.AnalyticsFilters `json:"filters"                 mapstructure:"filters"`
-	Timeout               time.Duration              `json:"timeout"                 mapstructure:"timeout"`
-	OmitDetailedRecording bool                       `json:"omit-detailed-recording" mapstructure:"omit-detailed-recording"`
-	Meta                  map[string]interface{}     `json:"meta"                    mapstructure:"meta"`
+	Type                  string                         `json:"type"                    mapstructure:"type"`
+	Filters               datastructure.AnalyticsFilters `json:"filters"                 mapstructure:"filters"`
+	Timeout               time.Duration                  `json:"timeout"                 mapstructure:"timeout"`
+	OmitDetailedRecording bool                           `json:"omit-detailed-recording" mapstructure:"omit-detailed-recording"`
+	Meta                  map[string]interface{}         `json:"meta"                    mapstructure:"meta"`
 }
 
 type pumpService struct {
@@ -33,13 +29,23 @@ type pumpService struct {
 	secInterval  time.Duration
 	omitDetails  bool
 	pumpBackends map[string]PumpConfig
-	handler      downloadfrom.DownloadHandler
+	dlstorage    downloadfrom.DownloadStroage
 }
 
-var pmps []PumpBackend
+func CreatePumpService(purgeDelay time.Duration, pc map[string]PumpConfig, cache *ristretto.Cache) *pumpService {
+	service := &pumpService{
+		secInterval:  purgeDelay,
+		omitDetails:  false,
+		pumpBackends: pc,
+		dlstorage:    memory.NewDownloadMemStorage(cache),
+	}
+	return service
+}
+
+var pmps []pump.PumpBackend
 
 func (s *pumpService) initialize() {
-	pmps = make([]PumpBackend, len(s.pumpBackends))
+	pmps = make([]pump.PumpBackend, len(s.pumpBackends))
 	i := 0
 	for key, pmp := range s.pumpBackends {
 		pumpTypeName := pmp.Type
@@ -47,7 +53,7 @@ func (s *pumpService) initialize() {
 			pumpTypeName = key
 		}
 
-		pmpType, err := GetPumpBackendByName(pumpTypeName)
+		pmpType, err := pump.GetPumpBackendByName(pumpTypeName)
 		if err != nil {
 			log.Fatal().Err(err).Msg("pump pumps load error, you can register new pumps or delete it")
 		} else {
@@ -73,7 +79,7 @@ func (p *pumpService) PrepareRun() *preparedPumpService {
 }
 
 func (p *pumpService) pump() {
-	analyticsValues := p.handler.GetAndDeleteSet(anaylticsKeyName)
+	analyticsValues := p.dlstorage.GetAndDeleteSet(anaylticsKeyName)
 	if len(analyticsValues) == 0 {
 		return
 	}
@@ -81,7 +87,7 @@ func (p *pumpService) pump() {
 	keys := make([]interface{}, len(analyticsValues))
 
 	for i, v := range analyticsValues {
-		decoded := analytics.AnalyticsRecord{}
+		decoded := datastructure.AnalyticsRecord{}
 		err := msgpack.Unmarshal([]byte(v.(string)), &decoded)
 		log.Debug().Msgf("decoded record: %v", decoded)
 		if err != nil {
@@ -113,7 +119,7 @@ func writeToPumps(keys []interface{}, purgeDelay time.Duration) {
 	}
 }
 
-func execPumpWriting(wg *sync.WaitGroup, pmp PumpBackend, keys *[]interface{}, purgeDelay time.Duration) {
+func execPumpWriting(wg *sync.WaitGroup, pmp pump.PumpBackend, keys *[]interface{}, purgeDelay time.Duration) {
 	timer := time.AfterFunc(purgeDelay, func() {
 		if pmp.GetTimeout() == 0 {
 			log.Warn().Msgf(
@@ -141,7 +147,7 @@ func execPumpWriting(wg *sync.WaitGroup, pmp PumpBackend, keys *[]interface{}, p
 
 	defer cancel()
 
-	go func(ch chan error, ctx context.Context, pmp PumpBackend, keys *[]interface{}) {
+	go func(ch chan error, ctx context.Context, pmp pump.PumpBackend, keys *[]interface{}) {
 		filteredKeys := filterData(pmp, *keys)
 
 		ch <- pmp.WriteData(ctx, filteredKeys)
@@ -163,7 +169,7 @@ func execPumpWriting(wg *sync.WaitGroup, pmp PumpBackend, keys *[]interface{}, p
 	}
 }
 
-func filterData(pump PumpBackend, keys []interface{}) []interface{} {
+func filterData(pump pump.PumpBackend, keys []interface{}) []interface{} {
 	filters := pump.GetFilters()
 	if !filters.HasFilter() && !pump.GetOmitDetailedRecording() {
 		return keys
@@ -172,7 +178,7 @@ func filterData(pump PumpBackend, keys []interface{}) []interface{} {
 	newLenght := 0
 
 	for _, key := range filteredKeys {
-		decoded, _ := key.(analytics.AnalyticsRecord)
+		decoded, _ := key.(datastructure.AnalyticsRecord)
 		if pump.GetOmitDetailedRecording() {
 			//decoded.Policies = ""
 			//decoded.Deciders = ""
@@ -206,21 +212,4 @@ func (p *preparedPumpService) Run(stopCh <-chan struct{}) error {
 			return nil
 		}
 	}
-}
-
-func CreatePumpService(opt *config.Download, pc map[string]PumpConfig, storage string) (*pumpService, error) {
-	service := &pumpService{
-		secInterval:  opt.PurgeDelay,
-		omitDetails:  false,
-		pumpBackends: pc,
-		handler:      nil,
-	}
-	if storage == "memory" {
-		service.handler = &memory.MemoryStorage{}
-	}
-
-	if err := service.handler.Init(nil); err != nil {
-		return nil, err
-	}
-	return service, nil
 }

@@ -1,4 +1,4 @@
-package pumps
+package pump
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	"helloworld/internal/pump/analytics"
+	"helloworld/internal/dataflow/datastructure"
 	log "helloworld/pkg/logger"
 	"os"
 	"path"
@@ -84,7 +84,7 @@ func (c *CSVPump) WriteData(ctx context.Context, data []interface{}) error {
 	writer := csv.NewWriter(outfile)
 
 	if appendHeader {
-		startRecord := analytics.AnalyticsRecord{}
+		startRecord := datastructure.AnalyticsRecord{}
 		headers := startRecord.GetFieldNames()
 
 		err := writer.Write(headers)
@@ -96,7 +96,7 @@ func (c *CSVPump) WriteData(ctx context.Context, data []interface{}) error {
 	}
 
 	for _, v := range data {
-		decoded, _ := v.(analytics.AnalyticsRecord)
+		decoded, _ := v.(datastructure.AnalyticsRecord)
 
 		toWrite := decoded.GetLineValues()
 		err := writer.Write(toWrite)

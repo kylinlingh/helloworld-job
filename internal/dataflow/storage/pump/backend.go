@@ -1,9 +1,9 @@
-package pumps
+package pump
 
 import (
 	"context"
 	"errors"
-	"helloworld/internal/pump/analytics"
+	"helloworld/internal/dataflow/datastructure"
 	"time"
 )
 
@@ -12,8 +12,8 @@ type PumpBackend interface {
 	New() PumpBackend
 	Init(interface{}) error
 	WriteData(ctx context.Context, keys []interface{}) error
-	SetFilters(filters analytics.AnalyticsFilters)
-	GetFilters() analytics.AnalyticsFilters
+	SetFilters(filters datastructure.AnalyticsFilters)
+	GetFilters() datastructure.AnalyticsFilters
 	SetTimeout(timeout time.Duration)
 	GetTimeout() time.Duration
 	SetOmitDetailedRecording(recording bool)
