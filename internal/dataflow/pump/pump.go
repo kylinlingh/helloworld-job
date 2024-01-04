@@ -62,7 +62,7 @@ func (s *pumpService) initialize() {
 			if initErr != nil {
 				log.Fatal().Err(initErr).Msg("pump pumps initialized failed")
 			} else {
-				log.Info().Str("pump pumps", pmpIns.GetName()).Msg("initialized successfully")
+				log.Info().Msgf("csv pump-backend initialized successfully")
 				pmpIns.SetFilters(pmp.Filters)
 				pmpIns.SetTimeout(pmp.Timeout)
 				pmpIns.SetOmitDetailedRecording(pmp.OmitDetailedRecording)
@@ -88,8 +88,8 @@ func (p *pumpService) pump() {
 
 	for i, v := range analyticsValues {
 		decoded := datastructure.AnalyticsRecord{}
-		err := msgpack.Unmarshal([]byte(v.(string)), &decoded)
-		log.Debug().Msgf("decoded record: %v", decoded)
+		err := msgpack.Unmarshal(v.([]byte), &decoded)
+		log.Info().Msgf("data decoded successfully: %v", decoded)
 		if err != nil {
 			log.Error().Err(err).Msg("couldn't unmarshal analytics data")
 		} else {

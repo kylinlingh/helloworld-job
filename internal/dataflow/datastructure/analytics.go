@@ -1,6 +1,7 @@
 package datastructure
 
 import (
+	"github.com/rs/zerolog"
 	"reflect"
 	"strconv"
 	"strings"
@@ -13,6 +14,15 @@ type AnalyticsRecord struct {
 	TaskID     string
 	TaskTag    string
 	TaskResult string
+}
+
+func (r AnalyticsRecord) MarshalZerologObject(e *zerolog.Event) {
+	e.
+		Int64("timestamp", r.TimeStamp).
+		Str("jobid", r.JobID).
+		Str("taskid", r.TaskID).
+		Str("tasktag", r.TaskTag).
+		Str("taskresult", r.TaskResult)
 }
 
 func (r *AnalyticsRecord) GetFieldNames() []string {

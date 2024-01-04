@@ -42,7 +42,7 @@ func CreateUploadService(opts *UploadConfig, storage uploadto.UploadStorage) *Up
 	wn := opts.WorkersNum
 	recordBufferSize := opts.RecordsBufferSize
 	workerBufferSize := recordBufferSize / uint64(wn)
-	log.Info().Uint64("workerBufferSize", workerBufferSize).Msgf("analytics pool worker buffer size")
+	log.Debug().Uint64("workerBufferSize", workerBufferSize).Msgf("analytics pool worker buffer size")
 	recordsChan := make(chan *datastructure.AnalyticsRecord, recordBufferSize)
 	uploadService = &UploadService{
 		uploadStorage:              storage,
@@ -113,7 +113,7 @@ func (u *UploadService) UploadRecord(record *datastructure.AnalyticsRecord) erro
 	}
 
 	u.recordChan <- record
-	log.Trace().Msg("record has been uploaded")
+	log.Info().EmbedObject(record).Msg("record uploaded successfully.")
 	return nil
 }
 

@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"helloworld/config"
 	"helloworld/internal/dataflow/pump"
-	memory2 "helloworld/internal/dataflow/storage/uploadto/memory"
+	"helloworld/internal/dataflow/storage/uploadto/memory"
 	"helloworld/internal/dataflow/upload"
 	"helloworld/internal/datastore"
 	"helloworld/internal/datastore/mysql"
@@ -58,15 +58,6 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 
 	// 开启数据上报功能
 	if c.Upload.Enable {
-		//go func() {
-		//	// 连接存储上报数据的后端
-		//	stopCh := signal.SetupSignalHandler()
-		//	c.getPumpBackendInstance_out(stopCh)
-		//}()
-		//
-		//// 开始上报数据
-		//uploadIns, _ := c.getUploadInstace_out()
-		//uploadIns.Start()
 
 		if c.Upload.Storage == "memory" {
 			// 上报数据
@@ -95,7 +86,7 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 }
 
 func (c *ParamConfig) getUploadServiceWithMemoryStorage() (*upload.UploadService, *ristretto.Cache) {
-	storage := &memory2.UploadMemoryStorage{}
+	storage := &memory.UploadMemoryStorage{}
 	storage.Connect()
 
 	uploadConf := &upload.UploadConfig{
@@ -124,17 +115,6 @@ func (c *ParamConfig) NewPumps() map[string]pump.PumpConfig {
 	}
 	return m
 }
-
-//func (c *ParamConfig) getPumpBackendInstance_out(stopCh <-chan struct{}) {
-//	pc := c.NewPumps()
-//	pservice, err := pumps.CreatePumpService(c.Download, pc, c.Upload.Storage)
-//	if err != nil {
-//		log.Fatal().Err(err).Msg("failed to initialize pump service")
-//	}
-//	if err = pservice.PrepareRun().Run(stopCh); err != nil {
-//		log.Fatal().Err(err).Msg("failed to run pump service")
-//	}
-//}
 
 func (c *ParamConfig) getDBInstance() (datastore.DBFactory, error) {
 	var factory datastore.DBFactory
@@ -255,6 +235,7 @@ func (c *completedJobConfig) Run(ctx context.Context) error {
 		c.closeFunc()
 	}
 
+	log.Info().Msg("all job finished without errors")
 	return nil
 }
 

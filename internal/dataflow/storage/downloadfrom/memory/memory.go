@@ -33,9 +33,12 @@ func (d *DownloadMemoryStorage) GetAndDeleteSet(keyName string) []interface{} {
 	ml.Mutext.Lock()
 	defer ml.Mutext.Unlock()
 
-	result := make([]interface{}, ml.Count)
+	result := make([]interface{}, len(ml.ValList))
 	for i, v := range ml.ValList {
 		result[i] = v
 	}
+
+	// 清空缓存
+	ml.ValList = ml.ValList[:0]
 	return result
 }

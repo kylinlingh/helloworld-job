@@ -51,7 +51,7 @@ func (c *CSVPump) Init(conf interface{}) error {
 		log.Error().Msg(ferr.Error())
 	}
 
-	log.Debug().Msg("csv initialized successfully")
+	log.Debug().Msg("csv file initialized successfully")
 
 	return nil
 }
@@ -107,6 +107,7 @@ func (c *CSVPump) WriteData(ctx context.Context, data []interface{}) error {
 	}
 
 	writer.Flush()
+	log.Info().Str("filename", fname).Msg("write to csv file successfully.")
 
 	return nil
 }

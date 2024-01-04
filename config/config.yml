@@ -4,8 +4,8 @@ app:
   run_mode: 'dev' # 运行模式：dev 为开发和调试模式（输出的日志为 plain text 格式；开启 pprof；），pro 为线上模式（输出的日志为 json 格式；关闭 pprof）
 
 logger:
-  log_level: 'trace'
-#  log_level: 'debug'
+#  log_level: 'trace'
+  log_level: 'debug'
 
 postgres:
   uri: ""

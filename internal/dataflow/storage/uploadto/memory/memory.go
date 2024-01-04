@@ -42,7 +42,6 @@ func (u *UploadMemoryStorage) AppendToSetPipelined(key string, values [][]byte) 
 	cval, ok := u.cache.Get(key)
 	if cval == nil || !ok {
 		ml = &datastructure.MessageList{
-			Count:   0,
 			ValList: make([][]byte, 0),
 		}
 		ok = u.cache.Set(key, ml, 1)
@@ -60,14 +59,14 @@ func (u *UploadMemoryStorage) AppendToSetPipelined(key string, values [][]byte) 
 	for _, val := range values {
 		ml.ValList = append(ml.ValList, val)
 	}
-	ml.Count += len(values)
+	//ml.Count += len(values)
 
 	val, ok := u.cache.Get(key)
 	if !ok {
 		log.Error().Msg("cannot get items from cache")
 	}
 	mv := val.(*datastructure.MessageList)
-	log.Trace().Int("count", len(mv.ValList)).Msg("record has been uploaded to memory cache")
+	log.Info().Int("count", len(mv.ValList)).Msg("records has been uploaded to memory cache.")
 }
 
 func (u UploadMemoryStorage) GetStorage() *ristretto.Cache {
