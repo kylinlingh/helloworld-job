@@ -2,12 +2,13 @@ package pumps
 
 import (
 	"helloworld/internal/pump/analytics"
+	"time"
 )
 
 // CommonPumpConfig defines common options used by all persistent store, like elasticsearch, kafka, mongo and etc.
 type CommonPumpConfig struct {
 	filters               analytics.AnalyticsFilters
-	timeout               int
+	timeout               time.Duration
 	OmitDetailedRecording bool
 }
 
@@ -22,12 +23,12 @@ func (p *CommonPumpConfig) GetFilters() analytics.AnalyticsFilters {
 }
 
 // SetTimeout set attributes `timeout` for CommonPumpConfig.
-func (p *CommonPumpConfig) SetTimeout(timeout int) {
+func (p *CommonPumpConfig) SetTimeout(timeout time.Duration) {
 	p.timeout = timeout
 }
 
 // GetTimeout get attributes `timeout` for CommonPumpConfig.
-func (p *CommonPumpConfig) GetTimeout() int {
+func (p *CommonPumpConfig) GetTimeout() time.Duration {
 	return p.timeout
 }
 

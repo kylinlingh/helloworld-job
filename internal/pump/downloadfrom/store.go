@@ -1,7 +1,7 @@
-package storage
+package downloadfrom
 
-// AnalyticsStorage defines the analytics storage interface.
-type AnalyticsStorage interface {
+// DownloadHandler defines the analytics downloadfrom interface.
+type DownloadHandler interface {
 	Init(config interface{}) error
 	GetName() string
 	Connect() bool

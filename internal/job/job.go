@@ -8,9 +8,12 @@ import (
 	"helloworld/internal/datastore"
 	"helloworld/internal/datastore/mysql"
 	scan2 "helloworld/internal/job/scan"
-	"helloworld/internal/pump"
+	"helloworld/internal/pump/pumps"
+	"helloworld/internal/pump/uploadto"
+	"helloworld/internal/pump/uploadto/memory"
 	"helloworld/pkg/db"
 	log "helloworld/pkg/logger"
+	"helloworld/pkg/signal"
 	"io"
 	"sync"
 )
@@ -20,13 +23,15 @@ import (
 //go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . ParamConfig
 type ParamConfig struct {
 	// From config.yml
-	App       config.App       `debugmap:"visible"`
-	Log       config.Log       `debugmap:"visible"`
-	Feature   config.Feature   `debugmap:"visible"`
-	Datastore config.DataStore `debugmap:"visible"`
-	Mysql     config.Mysql     `debugmap:"visible"`
-	Upload    config.Upload    `debugmap:"visible"`
-	Postgres  config.Postgres  `debugmap:"visible"`
+	App       *config.App       `debugmap:"visible"`
+	Log       *config.Log       `debugmap:"visible"`
+	Feature   *config.Feature   `debugmap:"visible"`
+	Datastore *config.DataStore `debugmap:"visible"`
+	Mysql     *config.Mysql     `debugmap:"visible"`
+	Postgres  *config.Postgres  `debugmap:"visible"`
+	Upload    *config.Upload    `debugmap:"visible"`
+	Download  *config.Download  `debugmap:"visible"`
+	Backends  *config.Backends  `debugmap:"visible"`
 
 	// From command flags
 	ConfigFile string `debugmap:"visible"`
@@ -34,7 +39,7 @@ type ParamConfig struct {
 }
 
 func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
-	log.Ctx(ctx).Info().Fields(helpers.Flatten(c.DebugMap())).Msg("configuration")
+	log.Ctx(ctx).Info().Fields(helpers.Flatten(c.DebugMap())).Msg("configuration as: ")
 
 	closeables := closeableStack{}
 	var err error
@@ -52,7 +57,11 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 
 	// 开启数据上报功能
 	if c.Upload.Enable {
-		// 连接存储上报数据的后端
+		go func() {
+			// 连接存储上报数据的后端
+			stopCh := signal.SetupSignalHandler()
+			c.getPumpBackendInstance(stopCh)
+		}()
 
 		// 开始上报数据
 		uploadIns, _ := c.getUploadInstace()
@@ -66,20 +75,46 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 	}, nil
 }
 
-func (c *ParamConfig) getUploadInstace() (*pump.UploadIns, error) {
-	var storageIns pump.UploadHandler
+func (c *ParamConfig) getUploadInstace() (*uploadto.UploadIns, error) {
+	var storageIns uploadto.UploadStorage
 	if c.Upload.Storage == "memory" {
-
+		storageIns = &memory.MemoryStorage{}
 	}
-	uploadOpts := &pump.UploadOptions{
-		WorkersNum:        c.Upload.WorkersNum,
-		RecordsBufferSize: c.Upload.RecordsBufferSize,
-		FlushInterval:     c.Upload.FlushInterval,
-		//StorageExpirationTime:   c.Upload.Storage,
+	uploadOpts := &uploadto.UploadOptions{
+		WorkersNum:              c.Upload.WorkersNum,
+		RecordsBufferSize:       c.Upload.RecordsBufferSize,
+		FlushInterval:           c.Upload.FlushInterval,
 		Enable:                  c.Upload.Enable,
 		EnableDetailedRecording: c.Upload.EnableDetailedRecording,
 	}
-	return pump.NewUploadIns(uploadOpts, storageIns), nil
+	return uploadto.NewUploadIns(uploadOpts, storageIns), nil
+}
+
+func (c *ParamConfig) NewPumps() map[string]pumps.PumpConfig {
+	m := make(map[string]pumps.PumpConfig)
+	for _, name := range c.Download.Backends {
+		switch name {
+		case "csv":
+			m["csv"] = pumps.PumpConfig{
+				Type: "csv",
+				Meta: map[string]interface{}{
+					"csv_dir": c.Backends.CSV.CSVDIR,
+				},
+			}
+		}
+	}
+	return m
+}
+
+func (c *ParamConfig) getPumpBackendInstance(stopCh <-chan struct{}) {
+	pc := c.NewPumps()
+	pservice, err := pumps.CreatePumpService(c.Download, pc, c.Upload.Storage)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to initialize pump service")
+	}
+	if err = pservice.PrepareRun().Run(stopCh); err != nil {
+		log.Fatal().Err(err).Msg("failed to run pump service")
+	}
 }
 
 func (c *ParamConfig) getDBInstance() (datastore.DBFactory, error) {
@@ -206,12 +241,14 @@ func (c *completedJobConfig) Run(ctx context.Context) error {
 
 func NewRunConfig(config *config.Config) *ParamConfig {
 	return &ParamConfig{
-		App:       config.App,
-		Log:       config.Log,
-		Feature:   config.Feature,
-		Datastore: config.DataStore,
-		Mysql:     config.Mysql,
-		Postgres:  config.Postgres,
-		Upload:    config.Upload,
+		App:       &config.App,
+		Log:       &config.Log,
+		Feature:   &config.Feature,
+		Datastore: &config.DataStore,
+		Mysql:     &config.Mysql,
+		Postgres:  &config.Postgres,
+		Upload:    &config.Upload,
+		Download:  &config.Download,
+		Backends:  &config.Backends,
 	}
 }

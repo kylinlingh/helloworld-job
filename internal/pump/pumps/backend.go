@@ -1,18 +1,21 @@
 package pumps
 
 import (
+	"context"
 	"errors"
 	"helloworld/internal/pump/analytics"
+	"time"
 )
 
 type PumpBackend interface {
 	GetName() string
 	New() PumpBackend
 	Init(interface{}) error
+	WriteData(ctx context.Context, keys []interface{}) error
 	SetFilters(filters analytics.AnalyticsFilters)
 	GetFilters() analytics.AnalyticsFilters
-	SetTimeout(timeout int)
-	GetTimeout() int
+	SetTimeout(timeout time.Duration)
+	GetTimeout() time.Duration
 	SetOmitDetailedRecording(recording bool)
 	GetOmitDetailedRecording() bool
 }

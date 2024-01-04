@@ -1,6 +1,7 @@
-package pump
+package uploadto
 
 import (
+	"github.com/dgraph-io/ristretto"
 	"github.com/vmihailenco/msgpack/v5"
 	"helloworld/internal/pump/analytics"
 	log "helloworld/pkg/logger"
@@ -9,20 +10,24 @@ import (
 	"time"
 )
 
-//const anaylticsKeyName = "job-analytics"
+const anaylticsKeyName = "job-analytics"
 
-// UploadOptions contains configuration items related to storage.
+var uploadIns *UploadIns
+
+// UploadOptions defines options for upload-storage
 type UploadOptions struct {
-	WorkersNum              int           `json:"workers-num"                 mapstructure:"pool-size"`
-	RecordsBufferSize       uint64        `json:"records-buffer-size"       mapstructure:"records-buffer-size"`
-	FlushInterval           time.Duration `json:"flush-interval"            mapstructure:"flush-interval"`
-	StorageExpirationTime   time.Duration `json:"storage-expiration-time"   mapstructure:"storage-expiration-time"`
-	Enable                  bool          `json:"enable"                    mapstructure:"enable"`
-	EnableDetailedRecording bool          `json:"enable-detailed-recording" mapstructure:"enable-detailed-recording"`
+	Enable            bool          `json:"enable"                    mapstructure:"enable"`
+	Storage           string        `json:"storage"                    mapstructure:"storage"`
+	WorkersNum        int           `json:"workers-num"                 mapstructure:"pool-size"`
+	RecordsBufferSize uint64        `json:"records-buffer-size"       mapstructure:"records-buffer-size"`
+	FlushInterval     time.Duration `json:"flush-interval"            mapstructure:"flush-interval"`
+	//StorageExpirationTime   time.Duration `json:"storage-expiration-time"   mapstructure:"storage-expiration-time"`
+	EnableDetailedRecording bool `json:"enable-detailed-recording" mapstructure:"enable-detailed-recording"`
 }
 
 type UploadIns struct {
-	handler                    UploadHandler
+	uploadStorage              UploadStorage
+	localCache                 *ristretto.Cache
 	workerNums                 int
 	recordChan                 chan *analytics.AnalyticsRecord
 	workerBufferSize           uint64
@@ -31,15 +36,15 @@ type UploadIns struct {
 	waitGroup                  sync.WaitGroup
 }
 
-// NewUploadIns returns a new storage instance.
-func NewUploadIns(opts *UploadOptions, handler UploadHandler) *UploadIns {
+// NewUploadIns returns a new downloadfrom instance.
+func NewUploadIns(opts *UploadOptions, handler UploadStorage) *UploadIns {
 	wn := opts.WorkersNum
 	recordBufferSize := opts.RecordsBufferSize
 	workerBufferSize := recordBufferSize / uint64(wn)
 	log.Info().Uint64("workerBufferSize", workerBufferSize).Msgf("analytics pool worker buffer size")
 	recordsChan := make(chan *analytics.AnalyticsRecord, recordBufferSize)
-	uploadIns := &UploadIns{
-		handler:                    handler,
+	uploadIns = &UploadIns{
+		uploadStorage:              handler,
 		workerNums:                 wn,
 		recordChan:                 recordsChan,
 		workerBufferSize:           workerBufferSize,
@@ -49,6 +54,8 @@ func NewUploadIns(opts *UploadOptions, handler UploadHandler) *UploadIns {
 }
 
 func (u *UploadIns) Start() {
+	u.uploadStorage.Connect()
+
 	atomic.SwapUint32(&u.shouldStop, 0)
 	for i := 0; i < u.workerNums; i++ {
 		u.waitGroup.Add(1)
@@ -69,7 +76,7 @@ func (u *UploadIns) runWorker(workerId int) {
 		case record, ok := <-u.recordChan:
 			// channel 被关闭
 			if !ok {
-				u.handler.AppendToSetPipelined(anaylticsKeyName, recordsBuffer)
+				u.uploadStorage.AppendToSetPipelined(anaylticsKeyName, recordsBuffer)
 				return
 			}
 
@@ -88,7 +95,8 @@ func (u *UploadIns) runWorker(workerId int) {
 		}
 		// 发送数据并重置 buffer
 		if len(recordsBuffer) > 0 && (readyToSend || time.Since(lastSentTS) >= u.recordsBufferFlushInterval) {
-			u.handler.AppendToSetPipelined(anaylticsKeyName, recordsBuffer)
+			log.Trace().Msg("record can be uploaded")
+			u.uploadStorage.AppendToSetPipelined(anaylticsKeyName, recordsBuffer)
 			recordsBuffer = recordsBuffer[:0]
 			lastSentTS = time.Now()
 		}
@@ -96,7 +104,23 @@ func (u *UploadIns) runWorker(workerId int) {
 
 }
 
-type UploadHandler interface {
+func (u *UploadIns) UploadRecord(record *analytics.AnalyticsRecord) error {
+	// 检查信号
+	if atomic.LoadUint32(&u.shouldStop) > 0 {
+		return nil
+	}
+
+	u.recordChan <- record
+	log.Trace().Msg("record has been uploaded")
+	return nil
+}
+
+func GetUploadInstance() *UploadIns {
+	return uploadIns
+}
+
+type UploadStorage interface {
 	Connect() bool
 	AppendToSetPipelined(string, [][]byte)
+	GetStorage() UploadStorage
 }

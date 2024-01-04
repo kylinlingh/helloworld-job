@@ -36,8 +36,10 @@ func (p *ParamConfig) ToOption() ParamConfigOption {
 		to.Feature = p.Feature
 		to.Datastore = p.Datastore
 		to.Mysql = p.Mysql
-		to.Upload = p.Upload
 		to.Postgres = p.Postgres
+		to.Upload = p.Upload
+		to.Download = p.Download
+		to.Backends = p.Backends
 		to.ConfigFile = p.ConfigFile
 		to.ReportPath = p.ReportPath
 	}
@@ -51,8 +53,10 @@ func (p ParamConfig) DebugMap() map[string]any {
 	debugMap["Feature"] = helpers.DebugValue(p.Feature, false)
 	debugMap["Datastore"] = helpers.DebugValue(p.Datastore, false)
 	debugMap["Mysql"] = helpers.DebugValue(p.Mysql, false)
-	debugMap["Upload"] = helpers.DebugValue(p.Upload, false)
 	debugMap["Postgres"] = helpers.DebugValue(p.Postgres, false)
+	debugMap["Upload"] = helpers.DebugValue(p.Upload, false)
+	debugMap["Download"] = helpers.DebugValue(p.Download, false)
+	debugMap["Backends"] = helpers.DebugValue(p.Backends, false)
 	debugMap["ConfigFile"] = helpers.DebugValue(p.ConfigFile, false)
 	debugMap["ReportPath"] = helpers.DebugValue(p.ReportPath, false)
 	return debugMap
@@ -75,51 +79,65 @@ func (p *ParamConfig) WithOptions(opts ...ParamConfigOption) *ParamConfig {
 }
 
 // WithApp returns an option that can set App on a ParamConfig
-func WithApp(app config.App) ParamConfigOption {
+func WithApp(app *config.App) ParamConfigOption {
 	return func(p *ParamConfig) {
 		p.App = app
 	}
 }
 
 // WithLog returns an option that can set Log on a ParamConfig
-func WithLog(log config.Log) ParamConfigOption {
+func WithLog(log *config.Log) ParamConfigOption {
 	return func(p *ParamConfig) {
 		p.Log = log
 	}
 }
 
 // WithFeature returns an option that can set Feature on a ParamConfig
-func WithFeature(feature config.Feature) ParamConfigOption {
+func WithFeature(feature *config.Feature) ParamConfigOption {
 	return func(p *ParamConfig) {
 		p.Feature = feature
 	}
 }
 
 // WithDatastore returns an option that can set Datastore on a ParamConfig
-func WithDatastore(datastore config.DataStore) ParamConfigOption {
+func WithDatastore(datastore *config.DataStore) ParamConfigOption {
 	return func(p *ParamConfig) {
 		p.Datastore = datastore
 	}
 }
 
 // WithMysql returns an option that can set Mysql on a ParamConfig
-func WithMysql(mysql config.Mysql) ParamConfigOption {
+func WithMysql(mysql *config.Mysql) ParamConfigOption {
 	return func(p *ParamConfig) {
 		p.Mysql = mysql
 	}
 }
 
+// WithPostgres returns an option that can set Postgres on a ParamConfig
+func WithPostgres(postgres *config.Postgres) ParamConfigOption {
+	return func(p *ParamConfig) {
+		p.Postgres = postgres
+	}
+}
+
 // WithUpload returns an option that can set Upload on a ParamConfig
-func WithUpload(upload config.Upload) ParamConfigOption {
+func WithUpload(upload *config.Upload) ParamConfigOption {
 	return func(p *ParamConfig) {
 		p.Upload = upload
 	}
 }
 
-// WithPostgres returns an option that can set Postgres on a ParamConfig
-func WithPostgres(postgres config.Postgres) ParamConfigOption {
+// WithDownload returns an option that can set Download on a ParamConfig
+func WithDownload(download *config.Download) ParamConfigOption {
 	return func(p *ParamConfig) {
-		p.Postgres = postgres
+		p.Download = download
+	}
+}
+
+// WithBackends returns an option that can set Backends on a ParamConfig
+func WithBackends(backends *config.Backends) ParamConfigOption {
+	return func(p *ParamConfig) {
+		p.Backends = backends
 	}
 }
 

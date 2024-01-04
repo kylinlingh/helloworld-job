@@ -30,8 +30,8 @@ func RegisterRootFlags(cmd *cobra.Command, config *job.ParamConfig) {
 
 	cmd.PersistentFlags().StringP("config", "c", "", configDescription)
 	cmd.PersistentFlags().StringP("source", "s", ".", "path to source")
-	cmd.PersistentFlags().StringP("storage-path", "r", "", "storage file")
-	cmd.PersistentFlags().StringP("storage-format", "f", "json", "output format (json, csv, junit, sarif)")
+	cmd.PersistentFlags().StringP("downloadfrom-path", "r", "", "downloadfrom file")
+	cmd.PersistentFlags().StringP("downloadfrom-format", "f", "json", "output format (json, csv, junit, sarif)")
 	cmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
 	cmd.PersistentFlags().StringP("log-level", "l", "info", "log level (trace, debug, info, warn, error, fatal)")
 	cmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")

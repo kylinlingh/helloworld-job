@@ -56,7 +56,7 @@ func (c *CSVPump) Init(conf interface{}) error {
 	return nil
 }
 
-// WriteData write analyzed data to csv persistent back-end storage.
+// WriteData write analyzed data to csv persistent back-end downloadfrom.
 func (c *CSVPump) WriteData(ctx context.Context, data []interface{}) error {
 	curtime := time.Now()
 	fname := fmt.Sprintf("%d-%s-%d-%d.csv", curtime.Year(), curtime.Month().String(), curtime.Day(), curtime.Hour())
