@@ -3,6 +3,8 @@ package scan
 import (
 	"context"
 	"errors"
+	"helloworld/internal/dataflow/datastructure"
+	"helloworld/internal/dataflow/upload"
 	"helloworld/internal/datastore"
 	"helloworld/internal/entity"
 	log "helloworld/pkg/logger"
@@ -19,6 +21,27 @@ func NewAndroidScanJob(ds datastore.DBFactory) *AndroidScanJob {
 
 func (a *AndroidScanJob) RunJob(ctx context.Context) error {
 	log.Ctx(ctx).Info().Msg("android scan job started")
+
+	a.ScanStaticCode(ctx)
+
+	record := datastructure.AnalyticsRecord{
+		TimeStamp:  time.Now().Unix(),
+		JobID:      "job-1",
+		TaskID:     "2",
+		TaskTag:    "2",
+		TaskResult: "41343",
+	}
+	upload.GetUploadService().UploadRecord(&record)
+
+	record1 := datastructure.AnalyticsRecord{
+		TimeStamp:  time.Now().Unix(),
+		JobID:      "job-2",
+		TaskID:     "2",
+		TaskTag:    "2",
+		TaskResult: "41343",
+	}
+	upload.GetUploadService().UploadRecord(&record1)
+
 	time.Sleep(10 * time.Second)
 	log.Ctx(ctx).Info().Msg("android scan job finished")
 	//return nil
@@ -32,6 +55,7 @@ func (a *AndroidScanJob) ScanStaticCode(ctx context.Context) error {
 	if err != nil {
 
 	}
+	a.store.TaskRecord().Create(ctx, &taskRecord)
 	return nil
 }
 

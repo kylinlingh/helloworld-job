@@ -4,14 +4,14 @@ app:
   run_mode: 'dev' # 运行模式：dev 为开发和调试模式（输出的日志为 plain text 格式；开启 pprof；），pro 为线上模式（输出的日志为 json 格式；关闭 pprof）
 
 logger:
+#  log_level: 'trace'
   log_level: 'debug'
 
 postgres:
-  pool_max: 2
-  url: ""
+  uri: ""
 
 feature:
-  shutdown_grace_period: 0s # 接收到终止信号后等待多久才彻底停止程序，这个时间用于响应存量的服务并释放资源
+  shutdown_grace_period: 10s # 接收到终止信号后等待多久才彻底停止程序，这个时间用于响应存量的服务并释放资源
 
 datastore:
   engine: "mysql" # 使用哪个数据库引擎，引擎对应的配置放下面，none 表示不使用数据库
@@ -24,3 +24,21 @@ mysql:
   max_idle_connections: 50
   max_open_connections: 100
   max_connection_life_time: 10s
+
+upload: # 上报特定数据
+  enable: true # 设置为 true 后，开启数据上报功能
+  storage: 'memory' # memory：上传到本地缓存；redis：上传到 redis
+  workers-num: 3 # 指定 worker 个数
+  records-buffer-size: 2000 # 缓存的上报数据数量，达到数量后会立即 flush
+  flush-interval: 200ms # 每次消息上报之间的时间间隔，单位：毫秒，0 < flush-interval <= 1000
+  enable-detailed-recording: true # 开启记录详情，详细记录的功能
+
+download: # 将上面上报的数据重新拉取下来，然后入库，只有在 uploadto.enable 为 true 时才会起作用
+  purge-delay: 1s # 多久拉取一次
+  backends: ['csv']
+
+backends:
+  csv:
+    csv_dir: './analytics-data'
+
+

@@ -8,11 +8,11 @@ import (
 	"sync"
 )
 
-type mysqlstore struct {
+type mysqlStore struct {
 	db *gorm.DB
 }
 
-func (d *mysqlstore) TaskRecord() datastore.TaskRecordRepo {
+func (d *mysqlStore) TaskRecord() datastore.TaskRecordRepo {
 	return newTaskRecord(d)
 }
 
@@ -29,7 +29,7 @@ func GetMysqlFactoryOr(opts *db.MysqlOptions) (datastore.DBFactory, error) {
 	var dbIns *gorm.DB
 	once.Do(func() {
 		dbIns, err = db.NewMysqlInstance(opts)
-		mysqlFactory = &mysqlstore{dbIns}
+		mysqlFactory = &mysqlStore{dbIns}
 	})
 	if mysqlFactory == nil || err != nil {
 		return nil, fmt.Errorf("failed to get mysql store fatory, mysqlFactory: %+v, error: %w", mysqlFactory, err)

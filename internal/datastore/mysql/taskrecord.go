@@ -14,7 +14,7 @@ func (t *taskrecord) Create(ctx context.Context, tr *entity.TaskRecord) error {
 	return t.db.Create(&tr).Error
 }
 
-func newTaskRecord(ds *mysqlstore) *taskrecord {
+func newTaskRecord(ds *mysqlStore) *taskrecord {
 	return &taskrecord{
 		ds.db,
 	}

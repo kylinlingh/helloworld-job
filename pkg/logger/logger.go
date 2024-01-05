@@ -30,7 +30,7 @@ import (
 
 携带错误：
 - log.Ctx(cmd.Context()).Fatal().Err(err).Msg("failed to create gRPC job")
-- log.Ctx(ctx).Error().Err(fmt.Errorf("unable to marshall termination log: %w", err)).Msg("failed to report termination log")
+- log.Ctx(ctx).Error().Err(fmt.Errorf("unable to marshall termination log: %w", err)).Msg("failed to downloadfrom termination log")
 */
 
 var Logger zerolog.Logger
@@ -53,6 +53,8 @@ func New(level string, runMode string) {
 		l = zerolog.InfoLevel
 	case "debug":
 		l = zerolog.DebugLevel
+	case "trace":
+		l = zerolog.TraceLevel
 	default:
 		l = zerolog.InfoLevel
 	}

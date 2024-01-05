@@ -2,14 +2,19 @@ package job
 
 import (
 	"context"
+	"github.com/dgraph-io/ristretto"
 	"github.com/ecordell/optgen/helpers"
 	"github.com/hashicorp/go-multierror"
 	"helloworld/config"
+	"helloworld/internal/dataflow/pump"
+	"helloworld/internal/dataflow/storage/uploadto/memory"
+	"helloworld/internal/dataflow/upload"
 	"helloworld/internal/datastore"
 	"helloworld/internal/datastore/mysql"
 	scan2 "helloworld/internal/job/scan"
 	"helloworld/pkg/db"
 	log "helloworld/pkg/logger"
+	"helloworld/pkg/signal"
 	"io"
 	"sync"
 )
@@ -19,12 +24,15 @@ import (
 //go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . ParamConfig
 type ParamConfig struct {
 	// From config.yml
-	App       config.App       `debugmap:"visible"`
-	Log       config.Log       `debugmap:"visible"`
-	Feature   config.Feature   `debugmap:"visible"`
-	Datastore config.DataStore `debugmap:"visible"`
-	Mysql     config.Mysql     `debugmap:"visible"`
-	Postgres  config.Postgres  `debugmap:"visible"`
+	App       *config.App       `debugmap:"visible"`
+	Log       *config.Log       `debugmap:"visible"`
+	Feature   *config.Feature   `debugmap:"visible"`
+	Datastore *config.DataStore `debugmap:"visible"`
+	Mysql     *config.Mysql     `debugmap:"visible"`
+	Postgres  *config.Postgres  `debugmap:"visible"`
+	Upload    *config.Upload    `debugmap:"visible"`
+	Download  *config.Download  `debugmap:"visible"`
+	Backends  *config.Backends  `debugmap:"visible"`
 
 	// From command flags
 	ConfigFile string `debugmap:"visible"`
@@ -32,7 +40,7 @@ type ParamConfig struct {
 }
 
 func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
-	log.Ctx(ctx).Info().Fields(helpers.Flatten(c.DebugMap())).Msg("configuration")
+	log.Ctx(ctx).Info().Fields(helpers.Flatten(c.DebugMap())).Msg("configuration as: ")
 
 	closeables := closeableStack{}
 	var err error
@@ -48,11 +56,64 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 	iosJob := scan2.NewIOSScanJob(dbInstance)
 	androidJob := scan2.NewAndroidScanJob(dbInstance)
 
+	// 开启数据上报功能
+	if c.Upload.Enable {
+
+		if c.Upload.Storage == "memory" {
+			// 上报数据
+			ups, cache := c.getUploadServiceWithMemoryStorage()
+			ups.Start()
+
+			pc := c.NewPumps()
+			pumpService := pump.CreatePumpService(c.Download.PurgeDelay, pc, cache)
+
+			// 拉取数据并导出到其他目的地
+			stopCh := signal.SetupSignalHandler()
+			preparedPumpService := pumpService.PrepareRun()
+			go func() {
+				preparedPumpService.Run(stopCh)
+			}()
+		} else if c.Upload.Storage == "redis" {
+
+		}
+	}
+
 	return &completedJobConfig{
 		IOSJob:     iosJob,
 		AndroidJob: androidJob,
 		closeFunc:  closeables.Close,
 	}, nil
+}
+
+func (c *ParamConfig) getUploadServiceWithMemoryStorage() (*upload.UploadService, *ristretto.Cache) {
+	storage := &memory.UploadMemoryStorage{}
+	storage.Connect()
+
+	uploadConf := &upload.UploadConfig{
+		Enable:                  c.Upload.Enable,
+		WorkersNum:              c.Upload.WorkersNum,
+		FlushInterval:           c.Upload.FlushInterval,
+		RecordsBufferSize:       c.Upload.RecordsBufferSize,
+		EnableDetailedRecording: c.Upload.EnableDetailedRecording,
+	}
+
+	return upload.CreateUploadService(uploadConf, storage), storage.GetStorage()
+}
+
+func (c *ParamConfig) NewPumps() map[string]pump.PumpConfig {
+	m := make(map[string]pump.PumpConfig)
+	for _, name := range c.Download.Backends {
+		switch name {
+		case "csv":
+			m["csv"] = pump.PumpConfig{
+				Type: "csv",
+				Meta: map[string]interface{}{
+					"csv_dir": c.Backends.CSV.CSVDIR,
+				},
+			}
+		}
+	}
+	return m
 }
 
 func (c *ParamConfig) getDBInstance() (datastore.DBFactory, error) {
@@ -133,7 +194,7 @@ type completedJobConfig struct {
 }
 
 func (c *completedJobConfig) Run(ctx context.Context) error {
-	log.Ctx(ctx).Info().Msg("ready to run scan job 1")
+	log.Ctx(ctx).Info().Msg("ready to run scan job")
 	wg := sync.WaitGroup{}
 	finishChan := make(chan struct{})
 	var multiErr error
@@ -174,16 +235,20 @@ func (c *completedJobConfig) Run(ctx context.Context) error {
 		c.closeFunc()
 	}
 
+	log.Info().Msg("all job finished without errors")
 	return nil
 }
 
 func NewRunConfig(config *config.Config) *ParamConfig {
 	return &ParamConfig{
-		App:       config.App,
-		Log:       config.Log,
-		Feature:   config.Feature,
-		Datastore: config.DataStore,
-		Mysql:     config.Mysql,
-		Postgres:  config.Postgres,
+		App:       &config.App,
+		Log:       &config.Log,
+		Feature:   &config.Feature,
+		Datastore: &config.DataStore,
+		Mysql:     &config.Mysql,
+		Postgres:  &config.Postgres,
+		Upload:    &config.Upload,
+		Download:  &config.Download,
+		Backends:  &config.Backends,
 	}
 }

@@ -1,6 +1,6 @@
 package config
 
-//go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . Config App Log Feature DataStore Mysql
+//go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . Config App Log Feature DataStore Mysql Postgres Upload Download Backends CSVOpt
 
 import (
 	"fmt"
@@ -17,6 +17,10 @@ type (
 		DataStore `yaml:"datastore"`
 		Mysql     `yaml:"mysql"`
 		Postgres  `yaml:"postgres"`
+		Upload    `yaml:"upload"`
+		Download  `yaml:"download"`
+		Backends  `yaml:"backends"`
+		CSVOpt    `yaml:"csv"`
 	}
 
 	// App -.
@@ -54,6 +58,28 @@ type (
 
 	Postgres struct {
 		Uri string `yaml:"uri"   env:"POSTGRES_URI" env-default:"" debugmap:"visible"`
+	}
+
+	Upload struct {
+		Enable                  bool          `env-required:"true" yaml:"enable"   env:"REPORT_ENABLE" env-default:"false" debugmap:"visible"`
+		Storage                 string        `yaml:"storage"   env:"REPORT_STORAGE" env-default:"memory" debugmap:"visible"`
+		WorkersNum              int           `yaml:"workers-num"   env:"REPORT_POOL_SIZE" env-default:"50" debugmap:"visible"`
+		RecordsBufferSize       uint64        `yaml:"records-buffer-size"   env:"REPORT_RECORDS_BUFFER_SIZE" env-default:"2000" debugmap:"visible"`
+		FlushInterval           time.Duration `yaml:"flush-interval"   env:"REPORT_FLUSH_INTERVAL" env-default:"200ms" debugmap:"visible"`
+		EnableDetailedRecording bool          `yaml:"enable-detailed-recording"   env:"REPORT_ENABLE_DETAILED_RECORDING" env-default:"true" debugmap:"visible"`
+	}
+
+	Download struct {
+		PurgeDelay time.Duration `yaml:"purge-delay"   env:"DOWNLOAD_PURGE_DELAY" env-default:"10s" debugmap:"visible"`
+		Backends   []string      `yaml:"backends"   env:"DOWNLOAD_BACKENDS" env-default:"" debugmap:"visible"`
+	}
+
+	Backends struct {
+		CSV CSVOpt `yaml:"csv"   env:"BACKENDS_CSV" env-default:"" debugmap:"visible"`
+	}
+
+	CSVOpt struct {
+		CSVDIR string `yaml:"csv_dir"   env:"CSV_DIR" env-default:"" debugmap:"visible"`
 	}
 )
 
