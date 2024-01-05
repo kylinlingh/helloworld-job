@@ -25,11 +25,10 @@ type PumpConfig struct {
 }
 
 type pumpService struct {
-	// 多久去拉取一次信息
-	secInterval  time.Duration
+	secInterval  time.Duration // 多久去拉取一次信息
 	omitDetails  bool
 	pumpBackends map[string]PumpConfig
-	dlstorage    downloadfrom.DownloadStroage
+	dlStorage    downloadfrom.DownloadStroage // 从哪里下载信息
 }
 
 func CreatePumpService(purgeDelay time.Duration, pc map[string]PumpConfig, cache *ristretto.Cache) *pumpService {
@@ -37,7 +36,7 @@ func CreatePumpService(purgeDelay time.Duration, pc map[string]PumpConfig, cache
 		secInterval:  purgeDelay,
 		omitDetails:  false,
 		pumpBackends: pc,
-		dlstorage:    memory.NewDownloadMemStorage(cache),
+		dlStorage:    memory.NewDownloadMemStorage(cache),
 	}
 	return service
 }
@@ -79,7 +78,7 @@ func (p *pumpService) PrepareRun() *preparedPumpService {
 }
 
 func (p *pumpService) pump() {
-	analyticsValues := p.dlstorage.GetAndDeleteSet(anaylticsKeyName)
+	analyticsValues := p.dlStorage.GetAndDeleteSet(anaylticsKeyName)
 	if len(analyticsValues) == 0 {
 		return
 	}
