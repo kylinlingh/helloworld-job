@@ -37,10 +37,42 @@ func (u *UploadMemoryStorage) Connect() bool {
 	return true
 }
 
+var uonce sync.Once
+
 func (u *UploadMemoryStorage) AppendToSetPipelined(key string, values [][]byte) {
+
+	uonce.Do(func() {
+		u.cache.Set(key, &datastructure.MessageList{}, 1)
+		// 必须等待写入成功
+		u.cache.Wait()
+	})
+	cval, ok := u.cache.Get(key)
+	if cval == nil || !ok {
+		log.Error().Err(errors.New("failed to get value from ristretto cache"))
+	}
+	var ml *datastructure.MessageList
+	ml = cval.(*datastructure.MessageList)
+
+	ml.Mutext.Lock()
+	defer ml.Mutext.Unlock()
+	for _, val := range values {
+		ml.ValList = append(ml.ValList, val)
+	}
+	log.Info().Int("count", len(ml.ValList)).Msg("records has been uploaded to memory cache.")
+
+	//val, ok := u.cache.Get(key)
+	//if !ok {
+	//	log.Error().Msg("cannot get items from cache")
+	//}
+	//mv := val.(*datastructure.MessageList)
+	//log.Info().Int("count", len(mv.ValList)).Msg("records has been uploaded to memory cache.")
+}
+
+func (u *UploadMemoryStorage) AppendToSetPipelined_out(key string, values [][]byte) {
 	var ml *datastructure.MessageList
 	cval, ok := u.cache.Get(key)
 	if cval == nil || !ok {
+
 		ml = &datastructure.MessageList{
 			ValList: make([][]byte, 0),
 		}
