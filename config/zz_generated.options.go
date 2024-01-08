@@ -357,9 +357,10 @@ func NewMysqlWithOptionsAndDefaults(opts ...MysqlOption) *Mysql {
 func (m *Mysql) ToOption() MysqlOption {
 	return func(to *Mysql) {
 		to.Host = m.Host
+		to.Port = m.Port
 		to.Username = m.Username
 		to.Password = m.Password
-		to.Database = m.Database
+		to.DBName = m.DBName
 		to.MaxIdleConnections = m.MaxIdleConnections
 		to.MaxOpenConnections = m.MaxOpenConnections
 		to.MaxConnectionLifeTime = m.MaxConnectionLifeTime
@@ -370,9 +371,10 @@ func (m *Mysql) ToOption() MysqlOption {
 func (m Mysql) DebugMap() map[string]any {
 	debugMap := map[string]any{}
 	debugMap["Host"] = helpers.DebugValue(m.Host, false)
+	debugMap["Port"] = helpers.DebugValue(m.Port, false)
 	debugMap["Username"] = helpers.DebugValue(m.Username, false)
 	debugMap["Password"] = helpers.SensitiveDebugValue(m.Password)
-	debugMap["Database"] = helpers.DebugValue(m.Database, false)
+	debugMap["DBName"] = helpers.DebugValue(m.DBName, false)
 	debugMap["MaxIdleConnections"] = helpers.DebugValue(m.MaxIdleConnections, false)
 	debugMap["MaxOpenConnections"] = helpers.DebugValue(m.MaxOpenConnections, false)
 	debugMap["MaxConnectionLifeTime"] = helpers.DebugValue(m.MaxConnectionLifeTime, false)
@@ -402,6 +404,13 @@ func WithHost(host string) MysqlOption {
 	}
 }
 
+// WithPort returns an option that can set Port on a Mysql
+func WithPort(port int) MysqlOption {
+	return func(m *Mysql) {
+		m.Port = port
+	}
+}
+
 // WithUsername returns an option that can set Username on a Mysql
 func WithUsername(username string) MysqlOption {
 	return func(m *Mysql) {
@@ -416,10 +425,10 @@ func WithPassword(password string) MysqlOption {
 	}
 }
 
-// WithDatabase returns an option that can set Database on a Mysql
-func WithDatabase(database string) MysqlOption {
+// WithDBName returns an option that can set DBName on a Mysql
+func WithDBName(dBName string) MysqlOption {
 	return func(m *Mysql) {
-		m.Database = database
+		m.DBName = dBName
 	}
 }
 
@@ -468,14 +477,28 @@ func NewPostgresWithOptionsAndDefaults(opts ...PostgresOption) *Postgres {
 // ToOption returns a new PostgresOption that sets the values from the passed in Postgres
 func (p *Postgres) ToOption() PostgresOption {
 	return func(to *Postgres) {
-		to.Uri = p.Uri
+		to.PHost = p.PHost
+		to.PPort = p.PPort
+		to.DBNAME = p.DBNAME
+		to.DBUser = p.DBUser
+		to.DBPassword = p.DBPassword
+		to.PMaxIdleConnections = p.PMaxIdleConnections
+		to.PMaxOpenConnections = p.PMaxOpenConnections
+		to.PMaxConnectionLifeTime = p.PMaxConnectionLifeTime
 	}
 }
 
 // DebugMap returns a map form of Postgres for debugging
 func (p Postgres) DebugMap() map[string]any {
 	debugMap := map[string]any{}
-	debugMap["Uri"] = helpers.DebugValue(p.Uri, false)
+	debugMap["PHost"] = helpers.DebugValue(p.PHost, false)
+	debugMap["PPort"] = helpers.DebugValue(p.PPort, false)
+	debugMap["DBNAME"] = helpers.DebugValue(p.DBNAME, false)
+	debugMap["DBUser"] = helpers.DebugValue(p.DBUser, false)
+	debugMap["DBPassword"] = helpers.DebugValue(p.DBPassword, false)
+	debugMap["PMaxIdleConnections"] = helpers.DebugValue(p.PMaxIdleConnections, false)
+	debugMap["PMaxOpenConnections"] = helpers.DebugValue(p.PMaxOpenConnections, false)
+	debugMap["PMaxConnectionLifeTime"] = helpers.DebugValue(p.PMaxConnectionLifeTime, false)
 	return debugMap
 }
 
@@ -495,10 +518,59 @@ func (p *Postgres) WithOptions(opts ...PostgresOption) *Postgres {
 	return p
 }
 
-// WithUri returns an option that can set Uri on a Postgres
-func WithUri(uri string) PostgresOption {
+// WithPHost returns an option that can set PHost on a Postgres
+func WithPHost(pHost string) PostgresOption {
 	return func(p *Postgres) {
-		p.Uri = uri
+		p.PHost = pHost
+	}
+}
+
+// WithPPort returns an option that can set PPort on a Postgres
+func WithPPort(pPort int) PostgresOption {
+	return func(p *Postgres) {
+		p.PPort = pPort
+	}
+}
+
+// WithDBNAME returns an option that can set DBNAME on a Postgres
+func WithDBNAME(dBNAME string) PostgresOption {
+	return func(p *Postgres) {
+		p.DBNAME = dBNAME
+	}
+}
+
+// WithDBUser returns an option that can set DBUser on a Postgres
+func WithDBUser(dBUser string) PostgresOption {
+	return func(p *Postgres) {
+		p.DBUser = dBUser
+	}
+}
+
+// WithDBPassword returns an option that can set DBPassword on a Postgres
+func WithDBPassword(dBPassword string) PostgresOption {
+	return func(p *Postgres) {
+		p.DBPassword = dBPassword
+	}
+}
+
+// WithPMaxIdleConnections returns an option that can set PMaxIdleConnections on a Postgres
+func WithPMaxIdleConnections(pMaxIdleConnections int) PostgresOption {
+	return func(p *Postgres) {
+		p.PMaxIdleConnections = pMaxIdleConnections
+	}
+}
+
+// WithPMaxOpenConnections returns an option that can set PMaxOpenConnections on a Postgres
+func WithPMaxOpenConnections(pMaxOpenConnections int) PostgresOption {
+	return func(p *Postgres) {
+		p.PMaxOpenConnections = pMaxOpenConnections
+	}
+}
+
+// WithPMaxConnectionLifeTime returns an option that can set PMaxConnectionLifeTime on a Postgres
+func WithPMaxConnectionLifeTime(pMaxConnectionLifeTime time.Duration) PostgresOption {
+	return func(p *Postgres) {
+		p.PMaxConnectionLifeTime = pMaxConnectionLifeTime
 	}
 }
 

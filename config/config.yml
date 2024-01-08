@@ -14,13 +14,24 @@ feature:
   shutdown_grace_period: 10s # 接收到终止信号后等待多久才彻底停止程序，这个时间用于响应存量的服务并释放资源
 
 datastore:
-  engine: "mysql" # 使用哪个数据库引擎，引擎对应的配置放下面，none 表示不使用数据库
+  engine: "psql" # 使用哪个数据库引擎，引擎对应的配置放下面: mysql, psql
+
+psql:
+  host: '127.0.0.1'
+  port: 5432
+  db_name: 'postgres'
+  db_user: 'postgres'
+  db_password: ''
+  max_idle_connections: 50
+  max_open_connections: 100
+  max_connection_life_time: 10s
 
 mysql:
   host: '127.0.0.1'
+  port: 3306
   username: 'root'
   password: '12345678'
-  database: 'test'
+  db_name: 'test'
   max_idle_connections: 50
   max_open_connections: 100
   max_connection_life_time: 10s

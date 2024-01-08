@@ -2,6 +2,8 @@ package job
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/dgraph-io/ristretto"
 	"github.com/ecordell/optgen/helpers"
 	"github.com/hashicorp/go-multierror"
@@ -11,6 +13,7 @@ import (
 	"helloworld/internal/dataflow/upload"
 	"helloworld/internal/datastore"
 	"helloworld/internal/datastore/mysql"
+	"helloworld/internal/datastore/postgres"
 	scan2 "helloworld/internal/job/scan"
 	"helloworld/pkg/db"
 	log "helloworld/pkg/logger"
@@ -124,9 +127,10 @@ func (c *ParamConfig) getDBInstance() (datastore.DBFactory, error) {
 		mysqlOptions := db.MysqlOptions{
 			RunMode:               c.App.RunMode,
 			Host:                  c.Mysql.Host,
+			Port:                  c.Mysql.Port,
 			Username:              c.Mysql.Username,
 			Password:              c.Mysql.Password,
-			Database:              c.Mysql.Database,
+			Database:              c.Mysql.DBName,
 			MaxIdleConnections:    c.Mysql.MaxIdleConnections,
 			MaxOpenConnections:    c.Mysql.MaxOpenConnections,
 			MaxConnectionLifeTime: c.Mysql.MaxConnectionLifeTime,
@@ -136,6 +140,24 @@ func (c *ParamConfig) getDBInstance() (datastore.DBFactory, error) {
 		if err != nil {
 			return nil, err
 		}
+	case "psql":
+		psqlOpts := db.PsqlOptions{
+			RunMode:               c.App.RunMode,
+			Host:                  c.Postgres.PHost,
+			Port:                  c.Postgres.PPort,
+			Username:              c.Postgres.DBUser,
+			Password:              c.Postgres.DBPassword,
+			DBName:                c.Postgres.DBNAME,
+			MaxIdleConnections:    c.Postgres.PMaxIdleConnections,
+			MaxOpenConnections:    c.Postgres.PMaxOpenConnections,
+			MaxConnectionLifeTime: c.Postgres.PMaxConnectionLifeTime,
+		}
+		factory, err = postgres.GetPsqlFactoryOr(&psqlOpts)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, errors.New(fmt.Sprintf("not invalid datastore engine: %s", c.Datastore.Engine))
 	}
 	return factory, nil
 }

@@ -65,7 +65,7 @@ func (u *UploadService) Start() {
 
 func (u *UploadService) runWorker(workerId int) {
 	defer u.waitGroup.Done()
-	log.Debug().Int("goroutinue id", workerId).Msg("worker running")
+	log.Trace().Int("goroutinue id", workerId).Msg("worker running")
 
 	recordsBuffer := make([][]byte, 0, u.workerBufferSize)
 	lastSentTS := time.Now()

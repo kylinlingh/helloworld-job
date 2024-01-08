@@ -3,43 +3,43 @@ package db
 import (
 	"fmt"
 	"github.com/lime008/gormzerolog"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"helloworld/pkg/logger"
-	"sync"
 	"time"
 )
 
-var (
-	once          sync.Once
-	mysqlInstance *gorm.DB
-)
-
-// MysqlOptions defines optsions for mysql database.
-type MysqlOptions struct {
+type PsqlOptions struct {
 	RunMode               string
 	Host                  string
 	Port                  int
 	Username              string
 	Password              string
-	Database              string
+	DBName                string
 	MaxIdleConnections    int
 	MaxOpenConnections    int
 	MaxConnectionLifeTime time.Duration
 	LogLevel              int
 }
 
-func NewMysqlInstance(opts *MysqlOptions) (*gorm.DB, error) {
-	dsn := fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=%t&loc=%s`,
+func NewPsqlInstance(opts *PsqlOptions) (*gorm.DB, error) {
+	//dsn := fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=%t&loc=%s`,
+	//	opts.Username,
+	//	opts.Password,
+	//	opts.Host,
+	//	opts.Port,
+	//	opts.DBName,
+	//	true,
+	//	"Local")
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Shanghai",
+		opts.Host,
 		opts.Username,
 		opts.Password,
-		opts.Host,
-		opts.Port,
-		opts.Database,
-		true,
-		"Local")
+		opts.DBName,
+		opts.Port)
 
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: gormzerolog.New(logger.GetLogger(), gormzerolog.Config{
 			SlowThreshold:             200 * time.Millisecond,
 			IgnoreRecordNotFoundError: false,

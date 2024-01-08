@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 	"helloworld/internal/datastore"
 	"helloworld/pkg/db"
+	log "helloworld/pkg/logger"
 	"sync"
 )
 
@@ -34,5 +35,6 @@ func GetMysqlFactoryOr(opts *db.MysqlOptions) (datastore.DBFactory, error) {
 	if mysqlFactory == nil || err != nil {
 		return nil, fmt.Errorf("failed to get mysql store fatory, mysqlFactory: %+v, error: %w", mysqlFactory, err)
 	}
+	log.Info().Msg("connected to mysql successfully")
 	return mysqlFactory, nil
 }
