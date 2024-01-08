@@ -3,8 +3,8 @@ package main
 import (
 	"errors"
 	"github.com/spf13/cobra"
-	"helloworld/config"
 	"helloworld/internal/cmd"
+	"helloworld/internal/job"
 	"helloworld/pkg/commonerrors"
 	log "helloworld/pkg/logger"
 	"os"
@@ -13,10 +13,11 @@ import (
 var errParsing = errors.New("parsing error")
 
 func main() {
-	cfg, err := config.NewConfig()
-	if err != nil {
-		log.Fatal().Msgf("Initialization failed: %s", err)
-	}
+	//cfg, err := config.NewConfig()
+	//if err != nil {
+	//	log.Fatal().Msgf("Initialization failed: %s", err)
+	//}
+	cfg := job.NewRunConfig()
 
 	// 重新初始化 log
 	log.New(cfg.Log.Level, cfg.App.RunMode)
@@ -34,7 +35,7 @@ func main() {
 
 	// 增加 scan 命令
 	scanCmd := cmd.NewScanCommand(rootCmd.Use, cfg)
-	cmd.RegisterScanFlags(scanCmd)
+	cmd.RegisterScanFlags(scanCmd, cfg)
 	rootCmd.AddCommand(scanCmd)
 
 	// 运行命令

@@ -40,6 +40,9 @@ type ParamConfig struct {
 	// From command flags
 	ConfigFile string `debugmap:"visible"`
 	ReportPath string `debugmap:"visible"`
+
+	ScanTargets []string `debugmap:"visible"`
+	ScanMode    string   `debugmap:"visible"`
 }
 
 func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
@@ -261,16 +264,20 @@ func (c *completedJobConfig) Run(ctx context.Context) error {
 	return nil
 }
 
-func NewRunConfig(config *config.Config) *ParamConfig {
+func NewRunConfig() *ParamConfig {
+	readConfig, err := config.NewConfig()
+	if err != nil {
+		log.Fatal().Msgf("Initialization failed: %s", err)
+	}
 	return &ParamConfig{
-		App:       &config.App,
-		Log:       &config.Log,
-		Feature:   &config.Feature,
-		Datastore: &config.DataStore,
-		Mysql:     &config.Mysql,
-		Postgres:  &config.Postgres,
-		Upload:    &config.Upload,
-		Download:  &config.Download,
-		Backends:  &config.Backends,
+		App:       &readConfig.App,
+		Log:       &readConfig.Log,
+		Feature:   &readConfig.Feature,
+		Datastore: &readConfig.DataStore,
+		Mysql:     &readConfig.Mysql,
+		Postgres:  &readConfig.Postgres,
+		Upload:    &readConfig.Upload,
+		Download:  &readConfig.Download,
+		Backends:  &readConfig.Backends,
 	}
 }
