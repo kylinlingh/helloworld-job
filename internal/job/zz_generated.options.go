@@ -40,8 +40,9 @@ func (p *ParamConfig) ToOption() ParamConfigOption {
 		to.Upload = p.Upload
 		to.Download = p.Download
 		to.Backends = p.Backends
-		to.ConfigFile = p.ConfigFile
-		to.ReportPath = p.ReportPath
+		to.ScanTargets = p.ScanTargets
+		to.ScanMode = p.ScanMode
+		to.CodePath = p.CodePath
 	}
 }
 
@@ -57,8 +58,9 @@ func (p ParamConfig) DebugMap() map[string]any {
 	debugMap["Upload"] = helpers.DebugValue(p.Upload, false)
 	debugMap["Download"] = helpers.DebugValue(p.Download, false)
 	debugMap["Backends"] = helpers.DebugValue(p.Backends, false)
-	debugMap["ConfigFile"] = helpers.DebugValue(p.ConfigFile, false)
-	debugMap["ReportPath"] = helpers.DebugValue(p.ReportPath, false)
+	debugMap["ScanTargets"] = helpers.DebugValue(p.ScanTargets, false)
+	debugMap["ScanMode"] = helpers.DebugValue(p.ScanMode, false)
+	debugMap["CodePath"] = helpers.DebugValue(p.CodePath, false)
 	return debugMap
 }
 
@@ -141,16 +143,30 @@ func WithBackends(backends *config.Backends) ParamConfigOption {
 	}
 }
 
-// WithConfigFile returns an option that can set ConfigFile on a ParamConfig
-func WithConfigFile(configFile string) ParamConfigOption {
+// WithScanTargets returns an option that can append ScanTargetss to ParamConfig.ScanTargets
+func WithScanTargets(scanTargets string) ParamConfigOption {
 	return func(p *ParamConfig) {
-		p.ConfigFile = configFile
+		p.ScanTargets = append(p.ScanTargets, scanTargets)
 	}
 }
 
-// WithReportPath returns an option that can set ReportPath on a ParamConfig
-func WithReportPath(reportPath string) ParamConfigOption {
+// SetScanTargets returns an option that can set ScanTargets on a ParamConfig
+func SetScanTargets(scanTargets []string) ParamConfigOption {
 	return func(p *ParamConfig) {
-		p.ReportPath = reportPath
+		p.ScanTargets = scanTargets
+	}
+}
+
+// WithScanMode returns an option that can set ScanMode on a ParamConfig
+func WithScanMode(scanMode string) ParamConfigOption {
+	return func(p *ParamConfig) {
+		p.ScanMode = scanMode
+	}
+}
+
+// WithCodePath returns an option that can set CodePath on a ParamConfig
+func WithCodePath(codePath string) ParamConfigOption {
+	return func(p *ParamConfig) {
+		p.CodePath = codePath
 	}
 }

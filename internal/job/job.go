@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgraph-io/ristretto"
-	"github.com/ecordell/optgen/helpers"
 	"github.com/hashicorp/go-multierror"
 	"helloworld/config"
 	"helloworld/internal/dataflow/pump"
@@ -38,11 +37,12 @@ type ParamConfig struct {
 	Backends  *config.Backends  `debugmap:"visible"`
 
 	// From command flags
-	ConfigFile string `debugmap:"visible"`
-	ReportPath string `debugmap:"visible"`
+	//ConfigFile string `debugmap:"visible"`
+	//ReportPath string `debugmap:"visible"`
 
 	ScanTargets []string `debugmap:"visible"`
 	ScanMode    string   `debugmap:"visible"`
+	CodePath    string   `debugmap:"visible"`
 }
 
 var jobMap map[string]func(factory datastore.DBFactory) scan.ScanJob
@@ -64,7 +64,7 @@ func initJobMap() {
 }
 
 func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
-	log.Ctx(ctx).Info().Fields(helpers.Flatten(c.DebugMap())).Msg("configuration as: ")
+	//log.Ctx(ctx).Info().Fields(helpers.Flatten(c.DebugMap())).Msg("configuration as: ")
 
 	initJobMap()
 
@@ -111,9 +111,12 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 		}
 	}
 
+	sp := &scan.JobParam{CodePath: c.CodePath}
+
 	return &completedJobConfig{
-		Jobs:      scanJobs,
-		closeFunc: closeables.Close,
+		jobs:       scanJobs,
+		ScanParams: sp,
+		closeFunc:  closeables.Close,
 	}, nil
 }
 
@@ -237,7 +240,8 @@ type RunnableJob interface {
 }
 
 type completedJobConfig struct {
-	Jobs []scan.ScanJob
+	jobs       []scan.ScanJob
+	ScanParams *scan.JobParam
 
 	// 程序终止时的回调函数
 	closeFunc func() error
@@ -248,13 +252,16 @@ func (c *completedJobConfig) Run(ctx context.Context) error {
 	wg := sync.WaitGroup{}
 	finishChan := make(chan struct{})
 	var multiErr error
-	jobCount := len(c.Jobs)
+	jobCount := len(c.jobs)
+
+	// 创建新的 context 用于传递参数
+	newContext := context.WithValue(ctx, scan.KEY_JOB_PARAM, c.ScanParams)
 
 	wg.Add(jobCount)
-	for _, job := range c.Jobs {
+	for _, job := range c.jobs {
 		go func(scanJob scan.ScanJob) {
 			defer wg.Done()
-			err := scanJob.RunJob(ctx)
+			err := scanJob.RunJob(newContext)
 			if err != nil {
 				multiErr = multierror.Append(multiErr, err)
 			}

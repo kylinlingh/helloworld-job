@@ -25,6 +25,10 @@ func NewAndroidSourceCodeScanJob(ds datastore.DBFactory) ScanJob {
 
 func (a *AndroidSourceCodeScanJob) RunJob(ctx context.Context) error {
 	log.Ctx(ctx).Info().Msg("android source code scan job started")
+	jp := ctx.Value(KEY_JOB_PARAM).(*JobParam)
+	if jp == nil {
+
+	}
 	return nil
 }
 
