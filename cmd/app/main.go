@@ -13,10 +13,7 @@ import (
 var errParsing = errors.New("parsing error")
 
 func main() {
-	//cfg, err := config.NewConfig()
-	//if err != nil {
-	//	log.Fatal().Msgf("Initialization failed: %s", err)
-	//}
+	//加载配置文件
 	cfg := job.NewRunConfig()
 
 	// 重新初始化 log

@@ -15,8 +15,30 @@ type AndroidScanJob struct {
 	store datastore.DBFactory
 }
 
-func NewAndroidScanJob(ds datastore.DBFactory) *AndroidScanJob {
-	return &AndroidScanJob{store: ds}
+type AndroidSourceCodeScanJob struct {
+	AndroidScanJob
+}
+
+func NewAndroidSourceCodeScanJob(ds datastore.DBFactory) ScanJob {
+	return &AndroidSourceCodeScanJob{AndroidScanJob{store: ds}}
+}
+
+func (a *AndroidSourceCodeScanJob) RunJob(ctx context.Context) error {
+	log.Ctx(ctx).Info().Msg("android source code scan job started")
+	return nil
+}
+
+type AndroidArtifactScanJob struct {
+	AndroidScanJob
+}
+
+func NewAndroidArtifactScanJob(ds datastore.DBFactory) ScanJob {
+	return &AndroidArtifactScanJob{AndroidScanJob{store: ds}}
+}
+
+func (a *AndroidArtifactScanJob) RunJob(ctx context.Context) error {
+	log.Ctx(ctx).Info().Msg("android binary artifact scan job started")
+	return nil
 }
 
 func (a *AndroidScanJob) RunJob(ctx context.Context) error {
@@ -56,9 +78,5 @@ func (a *AndroidScanJob) ScanStaticCode(ctx context.Context) error {
 
 	}
 	a.store.TaskRecord().Create(ctx, &taskRecord)
-	return nil
-}
-
-func (a *AndroidScanJob) ScanBinaryArtifacts(ctx context.Context) error {
 	return nil
 }

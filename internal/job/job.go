@@ -14,7 +14,7 @@ import (
 	"helloworld/internal/datastore"
 	"helloworld/internal/datastore/mysql"
 	"helloworld/internal/datastore/postgres"
-	scan2 "helloworld/internal/job/scan"
+	"helloworld/internal/job/scan"
 	"helloworld/pkg/db"
 	log "helloworld/pkg/logger"
 	"helloworld/pkg/signal"
@@ -45,8 +45,28 @@ type ParamConfig struct {
 	ScanMode    string   `debugmap:"visible"`
 }
 
+var jobMap map[string]func(factory datastore.DBFactory) scan.ScanJob
+
+const (
+	ANDROID_SOURCECODE = "android_sc"
+	ANDROID_ARTIFACT   = "android_af"
+	IOS_SCOURCECODE    = "ios_sc"
+	IOS_ARTIFACT       = "ios_af"
+)
+
+func initJobMap() {
+	jobMap = make(map[string]func(factory datastore.DBFactory) scan.ScanJob)
+	jobMap[ANDROID_SOURCECODE] = scan.NewAndroidSourceCodeScanJob
+	jobMap[ANDROID_ARTIFACT] = scan.NewAndroidArtifactScanJob
+	jobMap[IOS_SCOURCECODE] = scan.NewIOSSourceCodeScanJob
+	jobMap[IOS_ARTIFACT] = scan.NewIOSArtifactScanJob
+
+}
+
 func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 	log.Ctx(ctx).Info().Fields(helpers.Flatten(c.DebugMap())).Msg("configuration as: ")
+
+	initJobMap()
 
 	closeables := closeableStack{}
 	var err error
@@ -58,9 +78,16 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 	}()
 
 	dbInstance, err := c.getDBInstance()
-	// 通过 Newxxxx 函数实现依赖注入，将数据库实例注入到对象中
-	iosJob := scan2.NewIOSScanJob(dbInstance)
-	androidJob := scan2.NewAndroidScanJob(dbInstance)
+
+	// 创建多个扫描任务
+	scanJobs := []scan.ScanJob{}
+	for _, st := range c.ScanTargets {
+		if initFunc, ok := jobMap[st]; !ok {
+			log.Ctx(ctx).Fatal().Err(errors.New(fmt.Sprintf("invalid scan target: %s [%s, %s, %s, %s]", st, ANDROID_SOURCECODE, ANDROID_ARTIFACT, IOS_ARTIFACT, IOS_SCOURCECODE)))
+		} else {
+			scanJobs = append(scanJobs, initFunc(dbInstance))
+		}
+	}
 
 	// 开启数据上报功能
 	if c.Upload.Enable {
@@ -85,9 +112,8 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 	}
 
 	return &completedJobConfig{
-		IOSJob:     iosJob,
-		AndroidJob: androidJob,
-		closeFunc:  closeables.Close,
+		Jobs:      scanJobs,
+		closeFunc: closeables.Close,
 	}, nil
 }
 
@@ -211,8 +237,7 @@ type RunnableJob interface {
 }
 
 type completedJobConfig struct {
-	AndroidJob scan2.ScanJob
-	IOSJob     scan2.ScanJob
+	Jobs []scan.ScanJob
 
 	// 程序终止时的回调函数
 	closeFunc func() error
@@ -223,24 +248,18 @@ func (c *completedJobConfig) Run(ctx context.Context) error {
 	wg := sync.WaitGroup{}
 	finishChan := make(chan struct{})
 	var multiErr error
-	// 运行两个 2 任务
-	wg.Add(2)
+	jobCount := len(c.Jobs)
 
-	go func() {
-		defer wg.Done()
-		err := c.IOSJob.RunJob(ctx)
-		if err != nil {
-			multiErr = multierror.Append(multiErr, err)
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		err := c.AndroidJob.RunJob(ctx)
-		if err != nil {
-			multiErr = multierror.Append(multiErr, err)
-		}
-	}()
+	wg.Add(jobCount)
+	for _, job := range c.Jobs {
+		go func(scanJob scan.ScanJob) {
+			defer wg.Done()
+			err := scanJob.RunJob(ctx)
+			if err != nil {
+				multiErr = multierror.Append(multiErr, err)
+			}
+		}(job)
+	}
 
 	// 在后台等待任务结束
 	go func() {
