@@ -43,6 +43,7 @@ func (p *ParamConfig) ToOption() ParamConfigOption {
 		to.ScanTargets = p.ScanTargets
 		to.ScanMode = p.ScanMode
 		to.CodePath = p.CodePath
+		to.TaskID = p.TaskID
 	}
 }
 
@@ -61,6 +62,7 @@ func (p ParamConfig) DebugMap() map[string]any {
 	debugMap["ScanTargets"] = helpers.DebugValue(p.ScanTargets, false)
 	debugMap["ScanMode"] = helpers.DebugValue(p.ScanMode, false)
 	debugMap["CodePath"] = helpers.DebugValue(p.CodePath, false)
+	debugMap["TaskID"] = helpers.DebugValue(p.TaskID, false)
 	return debugMap
 }
 
@@ -168,5 +170,12 @@ func WithScanMode(scanMode string) ParamConfigOption {
 func WithCodePath(codePath string) ParamConfigOption {
 	return func(p *ParamConfig) {
 		p.CodePath = codePath
+	}
+}
+
+// WithTaskID returns an option that can set TaskID on a ParamConfig
+func WithTaskID(taskID string) ParamConfigOption {
+	return func(p *ParamConfig) {
+		p.TaskID = taskID
 	}
 }

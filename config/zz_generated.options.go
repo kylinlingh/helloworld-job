@@ -7,54 +7,6 @@ import (
 	"time"
 )
 
-type ConfigOption func(c *Config)
-
-// NewConfigWithOptions creates a new Config with the passed in options set
-func NewConfigWithOptions(opts ...ConfigOption) *Config {
-	c := &Config{}
-	for _, o := range opts {
-		o(c)
-	}
-	return c
-}
-
-// NewConfigWithOptionsAndDefaults creates a new Config with the passed in options set starting from the defaults
-func NewConfigWithOptionsAndDefaults(opts ...ConfigOption) *Config {
-	c := &Config{}
-	defaults.MustSet(c)
-	for _, o := range opts {
-		o(c)
-	}
-	return c
-}
-
-// ToOption returns a new ConfigOption that sets the values from the passed in Config
-func (c *Config) ToOption() ConfigOption {
-	return func(to *Config) {}
-}
-
-// DebugMap returns a map form of Config for debugging
-func (c Config) DebugMap() map[string]any {
-	debugMap := map[string]any{}
-	return debugMap
-}
-
-// ConfigWithOptions configures an existing Config with the passed in options set
-func ConfigWithOptions(c *Config, opts ...ConfigOption) *Config {
-	for _, o := range opts {
-		o(c)
-	}
-	return c
-}
-
-// WithOptions configures the receiver Config with the passed in options set
-func (c *Config) WithOptions(opts ...ConfigOption) *Config {
-	for _, o := range opts {
-		o(c)
-	}
-	return c
-}
-
 type AppOption func(a *App)
 
 // NewAppWithOptions creates a new App with the passed in options set
@@ -864,5 +816,63 @@ func (c *CSVOpt) WithOptions(opts ...CSVOptOption) *CSVOpt {
 func WithCSVDIR(cSVDIR string) CSVOptOption {
 	return func(c *CSVOpt) {
 		c.CSVDIR = cSVDIR
+	}
+}
+
+type EnvConfigOption func(e *EnvConfig)
+
+// NewEnvConfigWithOptions creates a new EnvConfig with the passed in options set
+func NewEnvConfigWithOptions(opts ...EnvConfigOption) *EnvConfig {
+	e := &EnvConfig{}
+	for _, o := range opts {
+		o(e)
+	}
+	return e
+}
+
+// NewEnvConfigWithOptionsAndDefaults creates a new EnvConfig with the passed in options set starting from the defaults
+func NewEnvConfigWithOptionsAndDefaults(opts ...EnvConfigOption) *EnvConfig {
+	e := &EnvConfig{}
+	defaults.MustSet(e)
+	for _, o := range opts {
+		o(e)
+	}
+	return e
+}
+
+// ToOption returns a new EnvConfigOption that sets the values from the passed in EnvConfig
+func (e *EnvConfig) ToOption() EnvConfigOption {
+	return func(to *EnvConfig) {
+		to.TaskID = e.TaskID
+	}
+}
+
+// DebugMap returns a map form of EnvConfig for debugging
+func (e EnvConfig) DebugMap() map[string]any {
+	debugMap := map[string]any{}
+	debugMap["TaskID"] = helpers.DebugValue(e.TaskID, false)
+	return debugMap
+}
+
+// EnvConfigWithOptions configures an existing EnvConfig with the passed in options set
+func EnvConfigWithOptions(e *EnvConfig, opts ...EnvConfigOption) *EnvConfig {
+	for _, o := range opts {
+		o(e)
+	}
+	return e
+}
+
+// WithOptions configures the receiver EnvConfig with the passed in options set
+func (e *EnvConfig) WithOptions(opts ...EnvConfigOption) *EnvConfig {
+	for _, o := range opts {
+		o(e)
+	}
+	return e
+}
+
+// WithTaskID returns an option that can set TaskID on a EnvConfig
+func WithTaskID(taskID string) EnvConfigOption {
+	return func(e *EnvConfig) {
+		e.TaskID = taskID
 	}
 }

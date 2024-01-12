@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgraph-io/ristretto"
+	"github.com/ecordell/optgen/helpers"
 	"github.com/hashicorp/go-multierror"
 	"helloworld/config"
 	"helloworld/internal/dataflow/pump"
@@ -43,6 +44,9 @@ type ParamConfig struct {
 	ScanTargets []string `debugmap:"visible"`
 	ScanMode    string   `debugmap:"visible"`
 	CodePath    string   `debugmap:"visible"`
+
+	// From env
+	TaskID string `debugmap:"visible"`
 }
 
 var jobMap map[string]func(factory datastore.DBFactory) scan.ScanJob
@@ -64,7 +68,7 @@ func initJobMap() {
 }
 
 func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
-	//log.Ctx(ctx).Info().Fields(helpers.Flatten(c.DebugMap())).Msg("configuration as: ")
+	log.Ctx(ctx).Info().Fields(helpers.Flatten(c.DebugMap())).Msg("configuration as: ")
 
 	initJobMap()
 
@@ -111,7 +115,7 @@ func (c *ParamConfig) Complete(ctx context.Context) (RunnableJob, error) {
 		}
 	}
 
-	sp := &scan.JobParam{CodePath: c.CodePath}
+	sp := &scan.JobParam{CodePath: c.CodePath, TaskID: c.TaskID}
 
 	return &completedJobConfig{
 		jobs:       scanJobs,
@@ -291,19 +295,24 @@ func (c *completedJobConfig) Run(ctx context.Context) error {
 }
 
 func NewRunConfig() *ParamConfig {
-	readConfig, err := config.NewConfig()
+	fileConfig, err := config.NewConfigFromFile()
 	if err != nil {
-		log.Fatal().Msgf("Initialization failed: %s", err)
+		log.Fatal().Msgf("failed to initialize because cannot read config from file: %s", err)
+	}
+	envConfig, err := config.NewConfigFromEnv()
+	if err != nil {
+		log.Fatal().Msgf("failed to initialize because cannot read config from env: %s", err)
 	}
 	return &ParamConfig{
-		App:       &readConfig.App,
-		Log:       &readConfig.Log,
-		Feature:   &readConfig.Feature,
-		Datastore: &readConfig.DataStore,
-		Mysql:     &readConfig.Mysql,
-		Postgres:  &readConfig.Postgres,
-		Upload:    &readConfig.Upload,
-		Download:  &readConfig.Download,
-		Backends:  &readConfig.Backends,
+		App:       &fileConfig.App,
+		Log:       &fileConfig.Log,
+		Feature:   &fileConfig.Feature,
+		Datastore: &fileConfig.DataStore,
+		Mysql:     &fileConfig.Mysql,
+		Postgres:  &fileConfig.Postgres,
+		Upload:    &fileConfig.Upload,
+		Download:  &fileConfig.Download,
+		Backends:  &fileConfig.Backends,
+		TaskID:    envConfig.TaskID,
 	}
 }

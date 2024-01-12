@@ -4,6 +4,6 @@ import (
 	"helloworld/config"
 )
 
-func Run(cfg *config.Config) {
+func Run(cfg *config.FileConfig) {
 
 }

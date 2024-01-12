@@ -1,6 +1,6 @@
 package config
 
-//go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . Config App Log Feature DataStore Mysql Postgres Upload Download Backends CSVOpt
+//go:generate go run github.com/ecordell/optgen -output zz_generated.options.go . Config App Log Feature DataStore Mysql Postgres Upload Download Backends CSVOpt EnvConfig
 
 import (
 	"fmt"
@@ -9,8 +9,8 @@ import (
 )
 
 type (
-	// Config 用于描述配置文件
-	Config struct {
+	// FileConfig 用于描述配置文件
+	FileConfig struct {
 		App       `yaml:"app"`
 		Log       `yaml:"logger"`
 		Feature   `yaml:"feature"`
@@ -91,9 +91,9 @@ type (
 	}
 )
 
-// NewConfig returns app config.
-func NewConfig() (*Config, error) {
-	cfg := &Config{}
+// NewConfigFromFile returns app config.
+func NewConfigFromFile() (*FileConfig, error) {
+	cfg := &FileConfig{}
 
 	err := cleanenv.ReadConfig("./config/config.yml", cfg)
 	if err != nil {
@@ -106,4 +106,17 @@ func NewConfig() (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+type EnvConfig struct {
+	TaskID string `env-required:"true" env:"TASK_ID" debugmap:"visible"`
+}
+
+func NewConfigFromEnv() (*EnvConfig, error) {
+	var cfg EnvConfig
+	err := cleanenv.ReadEnv(&cfg)
+	if err != nil {
+		return nil, err
+	}
+	return &cfg, nil
 }
