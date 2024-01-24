@@ -1,7 +1,9 @@
 package datastructure
 
 import (
+	"fmt"
 	"github.com/rs/zerolog"
+	"helloworld/internal/utils"
 	"reflect"
 	"strconv"
 	"strings"
@@ -39,14 +41,13 @@ func (r *AnalyticsRecord) GetFieldNames() []string {
 
 // GetLineValues returns all the line values.
 func (a *AnalyticsRecord) GetLineValues() []string {
-	val := reflect.ValueOf(a).Elem()
+	allFileds := utils.DeepFields(*a)
 	fields := []string{}
-
-	for i := 0; i < val.NumField(); i++ {
-		valueField := val.Field(i)
-		typeField := val.Type().Field(i)
+	for _, valueField := range allFileds {
 		var thisVal string
-		switch typeField.Type.String() {
+		fmt.Println(valueField.Kind().String() + "  " + valueField.Type().String())
+
+		switch valueField.Type().String() {
 		case "int":
 			thisVal = strconv.Itoa(int(valueField.Int()))
 		case "int64":
@@ -66,7 +67,6 @@ func (a *AnalyticsRecord) GetLineValues() []string {
 
 		fields = append(fields, thisVal)
 	}
-
 	return fields
 }
 

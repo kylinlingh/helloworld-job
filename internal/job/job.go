@@ -20,6 +20,7 @@ import (
 	"helloworld/pkg/signal"
 	"io"
 	"sync"
+	"time"
 )
 
 // ParamConfig 用于描述程序运行时的所有配置项（配置文件 + 命令行传入参数 + 其他自定义参数）
@@ -290,6 +291,8 @@ func (c *completedJobConfig) Run(ctx context.Context) error {
 		c.closeFunc()
 	}
 
+	log.Info().Msg("sleep 10s to wait for data flushing")
+	time.Sleep(10 * time.Second)
 	log.Info().Msg("all job finished without errors")
 	return nil
 }
