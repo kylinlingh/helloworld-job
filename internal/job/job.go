@@ -48,6 +48,7 @@ type ParamConfig struct {
 
 	// From env
 	TaskID string `debugmap:"visible"`
+	LogDir string `debugmap:"visible"`
 }
 
 var jobMap map[string]func(factory datastore.DBFactory) scan.ScanJob
@@ -317,5 +318,6 @@ func NewRunConfig() *ParamConfig {
 		Download:  &fileConfig.Download,
 		Backends:  &fileConfig.Backends,
 		TaskID:    envConfig.TaskID,
+		LogDir:    envConfig.LogDir,
 	}
 }

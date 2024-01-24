@@ -17,7 +17,7 @@ func main() {
 	cfg := job.NewRunConfig()
 
 	// 重新初始化 log
-	log.New(cfg.Log.Level, cfg.App.RunMode, cfg.TaskID)
+	log.New(cfg.Log.Level, cfg.App.RunMode, cfg.LogDir, cfg.TaskID)
 
 	// 注册 root command 和回调函数，在解析命令参数失败时回调
 	rootCmd := cmd.NewRootCommand(cfg.App.Name)

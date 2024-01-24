@@ -110,6 +110,7 @@ func NewConfigFromFile() (*FileConfig, error) {
 
 type EnvConfig struct {
 	TaskID string `env-required:"true" env:"TASK_ID" debugmap:"visible"`
+	LogDir string `env-required:"true" env:"LOG_DIR" debugmap:"visible"`
 }
 
 func NewConfigFromEnv() (*EnvConfig, error) {

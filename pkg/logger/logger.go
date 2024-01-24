@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -41,7 +42,7 @@ func init() {
 	SetGlobalLogger(zerolog.New(os.Stdout))
 }
 
-func New(level string, runMode string, id string) {
+func New(level string, runMode string, dir string, id string) {
 	var l zerolog.Level
 
 	switch strings.ToLower(level) {
@@ -61,7 +62,7 @@ func New(level string, runMode string, id string) {
 	zerolog.SetGlobalLevel(l)
 
 	logFileName := fmt.Sprintf("%s.log", id)
-	logFile, _ := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, _ := os.OpenFile(path.Join(dir, logFileName), os.O_CREATE|os.O_WRONLY, 0644)
 
 	if runMode == "dev" {
 		// 格式化日志，更容易阅读
