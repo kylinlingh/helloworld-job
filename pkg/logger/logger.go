@@ -41,7 +41,7 @@ func init() {
 	SetGlobalLogger(zerolog.New(os.Stdout))
 }
 
-func New(level string, runMode string) {
+func New(level string, runMode string, id string) {
 	var l zerolog.Level
 
 	switch strings.ToLower(level) {
@@ -60,21 +60,27 @@ func New(level string, runMode string) {
 	}
 	zerolog.SetGlobalLevel(l)
 
+	logFileName := fmt.Sprintf("%s.log", id)
+	logFile, _ := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY, 0644)
+
 	if runMode == "dev" {
-		output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339Nano}
-		output.FormatMessage = func(i interface{}) string {
+		// 格式化日志，更容易阅读
+		consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339Nano}
+		consoleWriter.FormatMessage = func(i interface{}) string {
 			return fmt.Sprintf("%s", i)
 		}
-		output.FormatFieldName = func(i interface{}) string {
+		consoleWriter.FormatFieldName = func(i interface{}) string {
 			return fmt.Sprintf("%s:", i)
 		}
-		output.FormatFieldValue = func(i interface{}) string {
+		consoleWriter.FormatFieldValue = func(i interface{}) string {
 			return strings.ToUpper(fmt.Sprintf("%s", i))
 		}
 
+		multiWriter := zerolog.MultiLevelWriter(consoleWriter, logFile)
+
 		skipFrameCount := 0
 		SetGlobalLogger(
-			zerolog.New(output).
+			zerolog.New(multiWriter).
 				Level(l).
 				With().
 				Timestamp().
@@ -82,8 +88,10 @@ func New(level string, runMode string) {
 				Logger())
 	} else {
 		skipFrameCount := 1
+		consoleWriter := os.Stdout
+		multiWriter := zerolog.MultiLevelWriter(consoleWriter, logFile)
 		SetGlobalLogger(
-			zerolog.New(os.Stdout).
+			zerolog.New(multiWriter).
 				Level(l).
 				With().
 				Timestamp().
