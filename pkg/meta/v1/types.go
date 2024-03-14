@@ -1,8 +1,10 @@
 package v1
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"gorm.io/gorm"
+	"strings"
 	"time"
 )
 
@@ -95,4 +97,19 @@ type ListOptions struct {
 // various status objects. A resource may have only one of {ObjectMeta, ListMeta}.
 type ListMeta struct {
 	TotalCount int64 `json:"totalCount,omitempty"`
+}
+
+// gorm 无法直接处理 []string 类型，需要在存取数据时进行编解码操作：https://blog.csdn.net/js010111/article/details/126076320
+type Tags []string
+
+func (t *Tags) Scan(val interface{}) error {
+	s := val.([]uint8)
+	sp := strings.Split(string(s), "|")
+	*t = sp
+	return nil
+}
+
+func (t Tags) Value() (driver.Value, error) {
+	str := strings.Join(t, "|")
+	return str, nil
 }
