@@ -18,6 +18,8 @@ func main() {
 
 	// 重新初始化 log
 	log.New(cfg.Log.Level, cfg.App.RunMode, cfg.LogDir, cfg.TaskID)
+	// 如果程序 panic 了，将信息重定向到日志中
+	log.RewriteStderrFile(cfg.LogDir)
 
 	// 注册 root command 和回调函数，在解析命令参数失败时回调
 	rootCmd := cmd.NewRootCommand(cfg.App.Name)
