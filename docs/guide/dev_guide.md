@@ -52,7 +52,89 @@ mv codegen $GOPATH/bin/codegen
 * 在使用文档中注明错误码对应表
 ![](../img/errors-table.png)
 
+# 错误包使用
 
+不需要特意为错误封装一个 struct，只需要利用好 errors.Wrap功能进行错误信息封装，主要利用以下三个函数：
+- WithCode函数来创建新的 withCode 类型的错误
+- WrapC来将一个 error 封装成一个 withCode 类型的错误
+
+判断错误：
+- IsCode来判断一个 error 链中是否包含指定的 code
+
+参考下面内容
+```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/marmotedu/errors"
+  code "github.com/marmotedu/sample-code"
+)
+
+func main() {
+  if err := bindUser(); err != nil {
+    // %s: Returns the user-safe error string mapped to the error code or the error message if none is specified.
+    fmt.Println("====================> %s <====================")
+    fmt.Printf("%s\n\n", err)
+
+    // %v: Alias for %s.
+    fmt.Println("====================> %v <====================")
+    fmt.Printf("%v\n\n", err)
+
+    // %-v: Output caller details, useful for troubleshooting.
+    fmt.Println("====================> %-v <====================")
+    fmt.Printf("%-v\n\n", err)
+
+    // %+v: Output full error stack details, useful for debugging.
+    fmt.Println("====================> %+v <====================")
+    fmt.Printf("%+v\n\n", err)
+
+    // %#-v: Output caller details, useful for troubleshooting with JSON formatted output.
+    fmt.Println("====================> %#-v <====================")
+    fmt.Printf("%#-v\n\n", err)
+
+    // %#+v: Output full error stack details, useful for debugging with JSON formatted output.
+    fmt.Println("====================> %#+v <====================")
+    fmt.Printf("%#+v\n\n", err)
+
+    // do some business process based on the error type
+    if errors.IsCode(err, code.ErrEncodingFailed) {
+      fmt.Println("this is a ErrEncodingFailed error")
+    }
+
+    if errors.IsCode(err, code.ErrDatabase) {
+      fmt.Println("this is a ErrDatabase error")
+    }
+
+    // we can also find the cause error
+    fmt.Println(errors.Cause(err))
+  }
+}
+
+func bindUser() error {
+  if err := getUser(); err != nil {
+    // Step3: Wrap the error with a new error message and a new error code if needed.
+    return errors.WrapC(err, code.ErrEncodingFailed, "encoding user 'Lingfei Kong' failed.")
+  }
+
+  return nil
+}
+
+func getUser() error {
+  if err := queryDatabase(); err != nil {
+    // Step2: Wrap the error with a new error message.
+    return errors.Wrap(err, "get user failed.")
+  }
+
+  return nil
+}
+
+func queryDatabase() error {
+  // Step1. Create error with specified error code.
+  return errors.WithCode(code.ErrDatabase, "user 'Lingfei Kong' not found.")
+}
+```
 
 
 
