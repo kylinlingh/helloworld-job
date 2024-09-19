@@ -19,7 +19,7 @@ type AndroidSourceCodeScanJob struct {
 	AndroidScanJob
 }
 
-func NewAndroidSourceCodeScanJob(ds datastore.DBFactory) ScanJob {
+func NewAndroidSourceCodeScanJob(ds datastore.DBFactory) ApplicationScanJob {
 	return &AndroidSourceCodeScanJob{AndroidScanJob{store: ds}}
 }
 
@@ -36,7 +36,7 @@ type AndroidArtifactScanJob struct {
 	AndroidScanJob
 }
 
-func NewAndroidArtifactScanJob(ds datastore.DBFactory) ScanJob {
+func NewAndroidArtifactScanJob(ds datastore.DBFactory) ApplicationScanJob {
 	return &AndroidArtifactScanJob{AndroidScanJob{store: ds}}
 }
 

@@ -40,10 +40,8 @@ func (p *ParamConfig) ToOption() ParamConfigOption {
 		to.Upload = p.Upload
 		to.Download = p.Download
 		to.Backends = p.Backends
-		to.ScanTargets = p.ScanTargets
-		to.ScanMode = p.ScanMode
-		to.CodePath = p.CodePath
 		to.TaskID = p.TaskID
+		to.LogDir = p.LogDir
 	}
 }
 
@@ -59,10 +57,8 @@ func (p ParamConfig) DebugMap() map[string]any {
 	debugMap["Upload"] = helpers.DebugValue(p.Upload, false)
 	debugMap["Download"] = helpers.DebugValue(p.Download, false)
 	debugMap["Backends"] = helpers.DebugValue(p.Backends, false)
-	debugMap["ScanTargets"] = helpers.DebugValue(p.ScanTargets, false)
-	debugMap["ScanMode"] = helpers.DebugValue(p.ScanMode, false)
-	debugMap["CodePath"] = helpers.DebugValue(p.CodePath, false)
 	debugMap["TaskID"] = helpers.DebugValue(p.TaskID, false)
+	debugMap["LogDir"] = helpers.DebugValue(p.LogDir, false)
 	return debugMap
 }
 
@@ -145,37 +141,16 @@ func WithBackends(backends *config.Backends) ParamConfigOption {
 	}
 }
 
-// WithScanTargets returns an option that can append ScanTargetss to ParamConfig.ScanTargets
-func WithScanTargets(scanTargets string) ParamConfigOption {
-	return func(p *ParamConfig) {
-		p.ScanTargets = append(p.ScanTargets, scanTargets)
-	}
-}
-
-// SetScanTargets returns an option that can set ScanTargets on a ParamConfig
-func SetScanTargets(scanTargets []string) ParamConfigOption {
-	return func(p *ParamConfig) {
-		p.ScanTargets = scanTargets
-	}
-}
-
-// WithScanMode returns an option that can set ScanMode on a ParamConfig
-func WithScanMode(scanMode string) ParamConfigOption {
-	return func(p *ParamConfig) {
-		p.ScanMode = scanMode
-	}
-}
-
-// WithCodePath returns an option that can set CodePath on a ParamConfig
-func WithCodePath(codePath string) ParamConfigOption {
-	return func(p *ParamConfig) {
-		p.CodePath = codePath
-	}
-}
-
 // WithTaskID returns an option that can set TaskID on a ParamConfig
 func WithTaskID(taskID string) ParamConfigOption {
 	return func(p *ParamConfig) {
 		p.TaskID = taskID
+	}
+}
+
+// WithLogDir returns an option that can set LogDir on a ParamConfig
+func WithLogDir(logDir string) ParamConfigOption {
+	return func(p *ParamConfig) {
+		p.LogDir = logDir
 	}
 }

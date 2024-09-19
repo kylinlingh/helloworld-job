@@ -14,7 +14,7 @@ type IOSSourceCodeScanJob struct {
 	IOSScanJob
 }
 
-func NewIOSSourceCodeScanJob(ds datastore.DBFactory) ScanJob {
+func NewIOSSourceCodeScanJob(ds datastore.DBFactory) ApplicationScanJob {
 	return &IOSSourceCodeScanJob{IOSScanJob{store: ds}}
 }
 
@@ -28,7 +28,7 @@ type IOSArtifactScanJob struct {
 	IOSScanJob
 }
 
-func NewIOSArtifactScanJob(ds datastore.DBFactory) ScanJob {
+func NewIOSArtifactScanJob(ds datastore.DBFactory) ApplicationScanJob {
 	return &IOSArtifactScanJob{IOSScanJob{store: ds}}
 }
 

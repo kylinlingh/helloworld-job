@@ -19,6 +19,15 @@ var dirLock sync.Map
 // It returns the standard output and, for a non-zero exit,
 // a *RunError indicating the command, exit status, and standard error.
 // Standard error is unavailable for commands that exit successfully.
+// Example:
+// out, gitErr := Run(r.dir, "git", "ls-remote", "-q", r.remote)
+//
+//	if gitErr != nil {
+//				if rerr, ok := gitErr.(*RunError); ok {
+//					if bytes.Contains(rerr.Stderr, []byte("fatal: could not read Username")) {
+//						rerr.HelpText = "Confirm the import path was entered correctly.\nIf this is a private repository, see https://golang.org/doc/faq#git_https for additional information."
+//					}
+//				}
 func Run(dir string, cmdline ...any) ([]byte, error) {
 	return RunWithStdin(dir, nil, cmdline...)
 }

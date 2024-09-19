@@ -2,7 +2,7 @@
 1. 使用低版本 go 来编译，提示错误：note: module requires Go 1.20
 完整错误提示如下：
 ```shell
- ~/Shopee/Code/project-sast/golang-sast/cmd/app   master ±✚  go build   
+ ~/Code/project-sast/golang-sast/cmd/app   master ±✚  go build   
 # golang.org/x/exp/slog
 ../../../../../../.gvm/pkgsets/go1.18.10/global/pkg/mod/golang.org/x/exp@v0.0.0-20230905200255-921286631fa9/slog/level.go:159:13: undefined: atomic.Int64
 ../../../../../../.gvm/pkgsets/go1.18.10/global/pkg/mod/golang.org/x/exp@v0.0.0-20230905200255-921286631fa9/slog/attr.go:20:19: undefined: StringValue

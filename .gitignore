@@ -347,7 +347,7 @@ dist
 .todo.md
 .note.md
 
-# config files, may contain sensitive information
-analytics-data/
 _output
 *.log
+
+temp-artifact

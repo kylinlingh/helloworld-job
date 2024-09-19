@@ -50,6 +50,6 @@ download: # 将上面上报的数据重新拉取下来，然后入库，只有�
 
 backends:
   csv:
-    csv_dir: './analytics-data'
+    csv_dir: './temp-artifact/analytics-data'
 
 

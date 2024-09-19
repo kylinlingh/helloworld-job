@@ -844,6 +844,7 @@ func NewEnvConfigWithOptionsAndDefaults(opts ...EnvConfigOption) *EnvConfig {
 func (e *EnvConfig) ToOption() EnvConfigOption {
 	return func(to *EnvConfig) {
 		to.TaskID = e.TaskID
+		to.LogDir = e.LogDir
 	}
 }
 
@@ -851,6 +852,7 @@ func (e *EnvConfig) ToOption() EnvConfigOption {
 func (e EnvConfig) DebugMap() map[string]any {
 	debugMap := map[string]any{}
 	debugMap["TaskID"] = helpers.DebugValue(e.TaskID, false)
+	debugMap["LogDir"] = helpers.DebugValue(e.LogDir, false)
 	return debugMap
 }
 
@@ -874,5 +876,12 @@ func (e *EnvConfig) WithOptions(opts ...EnvConfigOption) *EnvConfig {
 func WithTaskID(taskID string) EnvConfigOption {
 	return func(e *EnvConfig) {
 		e.TaskID = taskID
+	}
+}
+
+// WithLogDir returns an option that can set LogDir on a EnvConfig
+func WithLogDir(logDir string) EnvConfigOption {
+	return func(e *EnvConfig) {
+		e.LogDir = logDir
 	}
 }
