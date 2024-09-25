@@ -69,7 +69,7 @@ type (
 	}
 
 	Upload struct {
-		Enable                  bool          `env-required:"true" yaml:"enable"   env:"REPORT_ENABLE" env-default:"false" debugmap:"visible"`
+		Enable                  bool          `yaml:"enable"   env:"REPORT_ENABLE" env-default:"false" debugmap:"visible"`
 		Storage                 string        `yaml:"storage"   env:"REPORT_STORAGE" env-default:"memory" debugmap:"visible"`
 		WorkersNum              int           `yaml:"workers-num"   env:"REPORT_POOL_SIZE" env-default:"50" debugmap:"visible"`
 		RecordsBufferSize       uint64        `yaml:"records-buffer-size"   env:"REPORT_RECORDS_BUFFER_SIZE" env-default:"2000" debugmap:"visible"`
