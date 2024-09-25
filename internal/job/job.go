@@ -4,12 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/dgraph-io/ristretto"
 	"github.com/hashicorp/go-multierror"
 	"helloworld/config"
-	"helloworld/internal/dataflow/pump"
-	"helloworld/internal/dataflow/storage/uploadto/memory"
-	"helloworld/internal/dataflow/upload"
 	"helloworld/internal/datastore"
 	"helloworld/internal/datastore/mysql"
 	"helloworld/internal/datastore/postgres"
@@ -29,44 +25,10 @@ type ParamConfig struct {
 	Datastore *config.DataStore `debugmap:"visible"`
 	Mysql     *config.Mysql     `debugmap:"visible"`
 	Postgres  *config.Postgres  `debugmap:"visible"`
-	Upload    *config.Upload    `debugmap:"visible"`
-	Download  *config.Download  `debugmap:"visible"`
-	Backends  *config.Backends  `debugmap:"visible"`
 
 	// From env
 	TaskID string `debugmap:"visible"`
 	LogDir string `debugmap:"visible"`
-}
-
-func (c *ParamConfig) getUploadServiceWithMemoryStorage() (*upload.UploadService, *ristretto.Cache) {
-	storage := &memory.UploadMemoryStorage{}
-	storage.Connect()
-
-	uploadConf := &upload.UploadConfig{
-		Enable:                  c.Upload.Enable,
-		WorkersNum:              c.Upload.WorkersNum,
-		FlushInterval:           c.Upload.FlushInterval,
-		RecordsBufferSize:       c.Upload.RecordsBufferSize,
-		EnableDetailedRecording: c.Upload.EnableDetailedRecording,
-	}
-
-	return upload.CreateUploadService(uploadConf, storage), storage.GetStorage()
-}
-
-func (c *ParamConfig) NewPumps() map[string]pump.PumpConfig {
-	m := make(map[string]pump.PumpConfig)
-	for _, name := range c.Download.Backends {
-		switch name {
-		case "csv":
-			m["csv"] = pump.PumpConfig{
-				Type: "csv",
-				Meta: map[string]interface{}{
-					"csv_dir": c.Backends.CSV.CSVDIR,
-				},
-			}
-		}
-	}
-	return m
 }
 
 func (c *ParamConfig) getDBInstance() (datastore.DBFactory, error) {
@@ -173,9 +135,6 @@ func NewRunConfig() *ParamConfig {
 		Datastore: &fileConfig.DataStore,
 		Mysql:     &fileConfig.Mysql,
 		Postgres:  &fileConfig.Postgres,
-		Upload:    &fileConfig.Upload,
-		Download:  &fileConfig.Download,
-		Backends:  &fileConfig.Backends,
 		TaskID:    envConfig.TaskID,
 		LogDir:    envConfig.LogDir,
 	}

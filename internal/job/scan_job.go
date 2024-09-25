@@ -4,10 +4,8 @@ import (
 	"context"
 	"github.com/ecordell/optgen/helpers"
 	"github.com/hashicorp/go-multierror"
-	"helloworld/internal/dataflow/pump"
 	"helloworld/internal/job/scan"
 	log "helloworld/pkg/logger"
-	"helloworld/pkg/signal"
 	"sync"
 	"time"
 )
@@ -42,28 +40,6 @@ func (c *ScanJobParamConfig) CompleteJobs(ctx context.Context) (RunnableJob, err
 
 	dbInstance, err := c.getDBInstance()
 	scanJobs := scan.CreateScanJobs(ctx, dbInstance, c.ScanTargets)
-
-	// 开启数据上报功能
-	if c.Upload.Enable {
-
-		if c.Upload.Storage == "memory" {
-			// 上报数据
-			ups, cache := c.getUploadServiceWithMemoryStorage()
-			ups.Start()
-
-			pc := c.NewPumps()
-			pumpService := pump.CreatePumpService(c.Download.PurgeDelay, pc, cache)
-
-			// 拉取数据并导出到其他目的地
-			stopCh := signal.SetupSignalHandler()
-			preparedPumpService := pumpService.PrepareRun()
-			go func() {
-				preparedPumpService.Run(stopCh)
-			}()
-		} else if c.Upload.Storage == "redis" {
-
-		}
-	}
 
 	sp := &scan.JobParam{CodePath: c.CodePath, TaskID: c.TaskID}
 

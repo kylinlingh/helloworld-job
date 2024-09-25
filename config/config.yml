@@ -36,20 +36,4 @@ mysql:
   max_open_connections: 100
   max_connection_life_time: 10s
 
-upload: # 上报特定数据
-  enable: true # 设置为 true 后，开启数据上报功能
-  storage: 'memory' # memory：上传到本地缓存；redis：上传到 redis
-  workers-num: 3 # 指定 worker 个数
-  records-buffer-size: 2000 # 缓存的上报数据数量，达到数量后会立即 flush
-  flush-interval: 200ms # 每次消息上报之间的时间间隔，单位：毫秒，0 < flush-interval <= 1000
-  enable-detailed-recording: true # 开启记录详情，详细记录的功能
-
-download: # 将上面上报的数据重新拉取下来，然后入库，只有在 uploadto.enable 为 true 时才会起作用
-  purge-delay: 1s # 多久拉取一次
-  backends: ['csv']
-
-backends:
-  csv:
-    csv_dir: './temp-artifact/analytics-data'
-
 
