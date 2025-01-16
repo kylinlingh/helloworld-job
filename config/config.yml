@@ -14,7 +14,7 @@ feature:
   shutdown_grace_period: 10s # 接收到终止信号后等待多久才彻底停止程序，这个时间用于响应存量的服务并释放资源
 
 datastore:
-  engine: "psql" # 使用哪个数据库引擎，引擎对应的配置放下面: mysql, psql
+  engine: "psql" # 使用哪个数据库引擎，引擎对应的配置放下面: mysql, psql；不需要使用数据库，则填入 no
 
 psql:
   host: '127.0.0.1'
