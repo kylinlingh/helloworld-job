@@ -37,9 +37,6 @@ func (p *ParamConfig) ToOption() ParamConfigOption {
 		to.Datastore = p.Datastore
 		to.Mysql = p.Mysql
 		to.Postgres = p.Postgres
-		to.Upload = p.Upload
-		to.Download = p.Download
-		to.Backends = p.Backends
 		to.TaskID = p.TaskID
 		to.LogDir = p.LogDir
 	}
@@ -54,9 +51,6 @@ func (p ParamConfig) DebugMap() map[string]any {
 	debugMap["Datastore"] = helpers.DebugValue(p.Datastore, false)
 	debugMap["Mysql"] = helpers.DebugValue(p.Mysql, false)
 	debugMap["Postgres"] = helpers.DebugValue(p.Postgres, false)
-	debugMap["Upload"] = helpers.DebugValue(p.Upload, false)
-	debugMap["Download"] = helpers.DebugValue(p.Download, false)
-	debugMap["Backends"] = helpers.DebugValue(p.Backends, false)
 	debugMap["TaskID"] = helpers.DebugValue(p.TaskID, false)
 	debugMap["LogDir"] = helpers.DebugValue(p.LogDir, false)
 	return debugMap
@@ -117,27 +111,6 @@ func WithMysql(mysql *config.Mysql) ParamConfigOption {
 func WithPostgres(postgres *config.Postgres) ParamConfigOption {
 	return func(p *ParamConfig) {
 		p.Postgres = postgres
-	}
-}
-
-// WithUpload returns an option that can set Upload on a ParamConfig
-func WithUpload(upload *config.Upload) ParamConfigOption {
-	return func(p *ParamConfig) {
-		p.Upload = upload
-	}
-}
-
-// WithDownload returns an option that can set Download on a ParamConfig
-func WithDownload(download *config.Download) ParamConfigOption {
-	return func(p *ParamConfig) {
-		p.Download = download
-	}
-}
-
-// WithBackends returns an option that can set Backends on a ParamConfig
-func WithBackends(backends *config.Backends) ParamConfigOption {
-	return func(p *ParamConfig) {
-		p.Backends = backends
 	}
 }
 

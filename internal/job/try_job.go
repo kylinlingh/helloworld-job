@@ -3,10 +3,8 @@ package job
 import (
 	"context"
 	"github.com/ecordell/optgen/helpers"
-	"helloworld/internal/dataflow/pump"
 	"helloworld/internal/job/try"
 	log "helloworld/pkg/logger"
-	"helloworld/pkg/signal"
 )
 
 type TryJobParamConfig struct {
@@ -39,28 +37,6 @@ func (c *TryJobParamConfig) CompleteTryJob(ctx context.Context) (RunnableJob, er
 
 	dbInstance, err := c.getDBInstance()
 	scanJobs := try.CreateTryJobs(ctx, dbInstance)
-
-	// 开启数据上报功能
-	if c.Upload.Enable {
-
-		if c.Upload.Storage == "memory" {
-			// 上报数据
-			ups, cache := c.getUploadServiceWithMemoryStorage()
-			ups.Start()
-
-			pc := c.NewPumps()
-			pumpService := pump.CreatePumpService(c.Download.PurgeDelay, pc, cache)
-
-			// 拉取数据并导出到其他目的地
-			stopCh := signal.SetupSignalHandler()
-			preparedPumpService := pumpService.PrepareRun()
-			go func() {
-				preparedPumpService.Run(stopCh)
-			}()
-		} else if c.Upload.Storage == "redis" {
-
-		}
-	}
 
 	return &completedTryJobConfig{
 		jobs:      scanJobs,

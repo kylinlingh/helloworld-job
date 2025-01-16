@@ -17,10 +17,6 @@ type (
 		DataStore `yaml:"datastore"`
 		Mysql     `yaml:"mysql"`
 		Postgres  `yaml:"psql"`
-		Upload    `yaml:"upload"`
-		Download  `yaml:"download"`
-		Backends  `yaml:"backends"`
-		CSVOpt    `yaml:"csv"`
 	}
 
 	// App -.
@@ -66,28 +62,6 @@ type (
 		PMaxIdleConnections    int           `yaml:"max_idle_connections"   env:"MYSQL_MAX_IDLE_CONNECTIONS" env-default:"none" debugmap:"visible"`
 		PMaxOpenConnections    int           `yaml:"max_open_connections"   env:"MYSQL_MAX_OPEN_CONNECTIONS" env-default:"none" debugmap:"visible"`
 		PMaxConnectionLifeTime time.Duration `yaml:"max_connection_life_time"   env:"MYSQL_MAX_CONNECTION_LIFE_TIME" env-default:"none" debugmap:"visible"`
-	}
-
-	Upload struct {
-		Enable                  bool          `yaml:"enable"   env:"REPORT_ENABLE" env-default:"false" debugmap:"visible"`
-		Storage                 string        `yaml:"storage"   env:"REPORT_STORAGE" env-default:"memory" debugmap:"visible"`
-		WorkersNum              int           `yaml:"workers-num"   env:"REPORT_POOL_SIZE" env-default:"50" debugmap:"visible"`
-		RecordsBufferSize       uint64        `yaml:"records-buffer-size"   env:"REPORT_RECORDS_BUFFER_SIZE" env-default:"2000" debugmap:"visible"`
-		FlushInterval           time.Duration `yaml:"flush-interval"   env:"REPORT_FLUSH_INTERVAL" env-default:"200ms" debugmap:"visible"`
-		EnableDetailedRecording bool          `yaml:"enable-detailed-recording"   env:"REPORT_ENABLE_DETAILED_RECORDING" env-default:"true" debugmap:"visible"`
-	}
-
-	Download struct {
-		PurgeDelay time.Duration `yaml:"purge-delay"   env:"DOWNLOAD_PURGE_DELAY" env-default:"10s" debugmap:"visible"`
-		Backends   []string      `yaml:"backends"   env:"DOWNLOAD_BACKENDS" env-default:"" debugmap:"visible"`
-	}
-
-	Backends struct {
-		CSV CSVOpt `yaml:"csv"   env:"BACKENDS_CSV" env-default:"" debugmap:"visible"`
-	}
-
-	CSVOpt struct {
-		CSVDIR string `yaml:"csv_dir"   env:"CSV_DIR" env-default:"" debugmap:"visible"`
 	}
 )
 

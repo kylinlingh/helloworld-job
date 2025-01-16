@@ -2,7 +2,9 @@ package logger
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path"
 	"strings"
@@ -60,6 +62,11 @@ func New(level string, runMode string, dir string, id string) {
 		l = zerolog.InfoLevel
 	}
 	zerolog.SetGlobalLevel(l)
+
+	_, err := os.Stat(dir)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		os.Mkdir(dir, os.ModePerm)
+	}
 
 	logFileName := fmt.Sprintf("%s.log", id)
 	logFile, _ := os.OpenFile(path.Join(dir, logFileName), os.O_CREATE|os.O_WRONLY, 0644)
